@@ -22,12 +22,14 @@ public class PulseDroid extends Activity {
 
 		final EditText server = (EditText) findViewById(R.id.EditTextServer);
 		final EditText port = (EditText) findViewById(R.id.EditTextPort);
+		final CheckBox checkBox = (CheckBox) findViewById(R.id.auto_start);
 
 		final SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
 		final SharedPreferences.Editor editor = sharedPref.edit();
 
 		server.setText(sharedPref.getString("server", ""));
 		port.setText(sharedPref.getString("port", ""));
+		checkBox.setChecked(sharedPref.getBoolean("auto_start", true));
 
 		// here is onButtonClick handler
 		final Button playButton = (Button) findViewById(R.id.ButtonPlay);
@@ -42,6 +44,7 @@ public class PulseDroid extends Activity {
 						}
 						editor.putString("server", server.getText().toString());
 						editor.putString("port", port.getText().toString());
+						editor.putBoolean("auto_start", checkBox.isChecked());
 						editor.commit();
 						playThread = new PulseSoundThread(server.getText()
 														  .toString(), port.getText().toString());
