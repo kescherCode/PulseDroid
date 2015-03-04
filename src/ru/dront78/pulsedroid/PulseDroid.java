@@ -15,6 +15,29 @@ public class PulseDroid extends Activity {
 	boolean playState = false;
 	PulseSoundThread playThread = null;
 
+	public void play() {
+		final Button playButton = (Button) findViewById(R.id.ButtonPlay);
+		final SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
+		final SharedPreferences.Editor editor = sharedPref.edit();
+		final EditText server = (EditText) findViewById(R.id.EditTextServer);
+		final EditText port = (EditText) findViewById(R.id.EditTextPort);
+		final CheckBox checkBox = (CheckBox) findViewById(R.id.auto_start);
+
+		playState = true;
+		playButton.setText("Stop");
+		if (null != playThread) {
+			playThread.Terminate();
+			playThread = null;
+		}
+		editor.putString("server", server.getText().toString());
+		editor.putString("port", port.getText().toString());
+		editor.putBoolean("auto_start", checkBox.isChecked());
+		editor.commit();
+		playThread = new PulseSoundThread(server.getText()
+										  .toString(), port.getText().toString());
+		new Thread(playThread).start();
+	}
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -36,20 +59,7 @@ public class PulseDroid extends Activity {
 		playButton.setOnClickListener(new View.OnClickListener() {
 				public void onClick(View v) {
 					if (false == playState) {
-						playState = true;
-						playButton.setText("Stop");
-						if (null != playThread) {
-							playThread.Terminate();
-							playThread = null;
-						}
-						editor.putString("server", server.getText().toString());
-						editor.putString("port", port.getText().toString());
-						editor.putBoolean("auto_start", checkBox.isChecked());
-						editor.commit();
-						playThread = new PulseSoundThread(server.getText()
-														  .toString(), port.getText().toString());
-						new Thread(playThread).start();
-
+						play();
 					} else {
 						playState = false;
 						playButton.setText("Play!");
