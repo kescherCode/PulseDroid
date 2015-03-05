@@ -10,7 +10,14 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
+        <service
+         android:isolatedProcess="false"
+         android:label="PulseDroidMusic"
+         android:name=".LocalService"
+         android:permission="string"
+         >
+</service>
 	</application>
 	<uses-sdk android:minSdkVersion="4" />
 	<uses-permission android:name="android.permission.INTERNET"></uses-permission>
-</manifest> 
+</manifest>
