@@ -52,7 +52,7 @@ public class PulseDroid extends Activity {
 
 		server.setText(sharedPref.getString("server", ""));
 		port.setText(sharedPref.getString("port", ""));
-		autoStartCheckBox.setChecked(sharedPref.getBoolean("auto_start", true));
+		autoStartCheckBox.setChecked(sharedPref.getBoolean("auto_start", false));
 
 		// here is onButtonClick handler
 		final Button playButton = (Button) findViewById(R.id.ButtonPlay);
