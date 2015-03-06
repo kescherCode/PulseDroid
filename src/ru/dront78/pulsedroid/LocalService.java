@@ -10,10 +10,13 @@ import android.widget.Toast;
 import android.app.Notification;
 import android.app.PendingIntent;
 import ru.dront78.pulsedroid.PulseDroid;
+import android.os.PowerManager.WakeLock;
+import android.os.PowerManager;
 
 public class LocalService extends Service {
     private NotificationManager mNM;
 
+    PowerManager.WakeLock wl = null;
 	public String server = "";
 	public String port = "";
 	PulseSoundThread playThread = null;
@@ -45,6 +48,8 @@ public class LocalService extends Service {
 			.setContentText("Pulse Running")
 			.build();
         startForeground(NOTIFICATION, notification);
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "pulse");
     }
 
     @Override
@@ -106,6 +111,7 @@ public class LocalService extends Service {
 		}
         Toast.makeText(this, R.string.local_service_playing, Toast.LENGTH_SHORT).show();
 		playThread = new PulseSoundThread(server, port);
+        playThread.wl = wl;
 		new Thread(playThread).start();
 	}
 
