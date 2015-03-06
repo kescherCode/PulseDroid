@@ -40,6 +40,11 @@ public class LocalService extends Service {
 
         // Display a notification about us starting.  We put an icon in the status bar.
         showNotification();
+        Notification notification = new Notification.Builder(this)
+			.setContentTitle("PulseDroid")
+			.setContentText("Pulse Running")
+			.build();
+        startForeground(NOTIFICATION, notification);
     }
 
     @Override
