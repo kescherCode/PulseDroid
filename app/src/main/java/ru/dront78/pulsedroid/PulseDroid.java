@@ -1,25 +1,21 @@
 package ru.dront78.pulsedroid;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.CheckBox;
-import android.content.SharedPreferences;
-import android.content.Context;
-import android.content.ServiceConnection;
-import android.content.ComponentName;
-import android.os.IBinder;
+import android.widget.EditText;
 import android.widget.Toast;
-import android.app.Notification;
-import android.content.Intent;
-
-import ru.dront78.pulsedroid.LocalService;
 
 
 public class PulseDroid extends Activity {
-	/** Called when the activity is first created. */
 
 	boolean mIsBound = false;
 	Button playButton = null;
@@ -59,8 +55,8 @@ public class PulseDroid extends Activity {
 		// class name because we want a specific service implementation that
 		// we know will be running in our own process (and thus won't be
 		// supporting component replacement by other applications).
-		bindService(new Intent(PulseDroid.this,
-							   LocalService.class), mConnection, Context.BIND_AUTO_CREATE);
+		bindService(new Intent(PulseDroid.this, LocalService.class),
+				mConnection, Context.BIND_AUTO_CREATE);
 		mIsBound = true;
 	}
 
@@ -72,26 +68,26 @@ public class PulseDroid extends Activity {
 		}
 	}
 
-	public void play () {
-		final Button playButton = (Button) findViewById(R.id.ButtonPlay);
-		final SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
-		final SharedPreferences.Editor editor = sharedPref.edit();
-		final EditText server = (EditText) findViewById(R.id.EditTextServer);
-		final EditText port = (EditText) findViewById(R.id.EditTextPort);
+	public void play() {
+		final Button playButton = findViewById(R.id.ButtonPlay);
+		final SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+		final EditText server = findViewById(R.id.EditTextServer);
+		final EditText port = findViewById(R.id.EditTextPort);
 
-		editor.putString("server", server.getText().toString());
-		editor.putString("port", port.getText().toString());
-		editor.putBoolean("auto_start", autoStartCheckBox.isChecked());
-		editor.commit();
+		sharedPref.edit()
+				.putString("server", server.getText().toString())
+				.putString("port", port.getText().toString())
+				.putBoolean("auto_start", autoStartCheckBox.isChecked())
+				.apply();
 		mBoundService.port = port.getText().toString();
 		mBoundService.server = server.getText().toString();
 
-		playButton.setText("Stop");
+		playButton.setText(R.string.btn_stop);
 		mBoundService.play();
 	}
 
-	public void stop () {
-		playButton.setText("Play!");
+	public void stop() {
+		playButton.setText(R.string.btn_play);
 		mBoundService.stop();
 	}
 
@@ -100,22 +96,21 @@ public class PulseDroid extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
-		final EditText server = (EditText) findViewById(R.id.EditTextServer);
-		final EditText port = (EditText) findViewById(R.id.EditTextPort);
-		autoStartCheckBox = (CheckBox) findViewById(R.id.auto_start);
+		final EditText server = findViewById(R.id.EditTextServer);
+		final EditText port = findViewById(R.id.EditTextPort);
+		autoStartCheckBox = findViewById(R.id.auto_start);
 
-		final SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
-		final SharedPreferences.Editor editor = sharedPref.edit();
+		final SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
 
 		server.setText(sharedPref.getString("server", ""));
 		port.setText(sharedPref.getString("port", ""));
 		autoStartCheckBox.setChecked(sharedPref.getBoolean("auto_start", false));
 
 		// here is onButtonClick handler
-		playButton = (Button) findViewById(R.id.ButtonPlay);
+		playButton = findViewById(R.id.ButtonPlay);
 		playButton.setOnClickListener(new View.OnClickListener() {
 				public void onClick(View v) {
-					if (false == mBoundService.playState) {
+					if (!mBoundService.isPlaying()) {
 						play();
 					} else {
 						stop();
@@ -124,12 +119,12 @@ public class PulseDroid extends Activity {
 			});
 
 		findViewById(R.id.ButtonExit).setOnClickListener(
-														 new View.OnClickListener() {
-															 public void onClick(View v) {
-																 stop();
-																 moveTaskToBack(true);
-															 }
-														 });
+				new View.OnClickListener() {
+					public void onClick(View v) {
+						stop();
+						moveTaskToBack(true);
+					}
+				});
 
 		doBindService();
 	}

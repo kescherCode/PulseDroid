@@ -5,6 +5,7 @@ import android.app.Service;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.Binder;
 import android.support.v4.app.NotificationCompat;
@@ -17,11 +18,11 @@ import android.os.PowerManager;
 public class LocalService extends Service {
     private NotificationManager mNM;
 
-    PowerManager.WakeLock wl = null;
+    PowerManager.WakeLock wakeLock = null;
 	public String server = "";
 	public String port = "";
-	PulseSoundThread playThread = null;
-	boolean playState = false;
+	private PulseSoundThread playThread = null;
+	private boolean isPlaying = false;
 
     // Unique Identification Number for the Notification.
     // We use it on Notification start, and to cancel it.
@@ -47,10 +48,11 @@ public class LocalService extends Service {
         Notification notification = new NotificationCompat.Builder(this, getString(R.string.service_notification_channel))
                 .setContentTitle("PulseDroid")
                 .setContentText("Pulse Running")
+                .setSmallIcon(R.drawable.ic_pulse)
                 .build();
         startForeground(NOTIFICATION, notification);
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "pulse");
+        wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "pulse");
     }
 
     @Override
@@ -65,6 +67,9 @@ public class LocalService extends Service {
     public void onDestroy() {
         // Cancel the persistent notification.
         mNM.cancel(NOTIFICATION);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(true);
+        }
 
         // Tell the user we stopped.
         Toast.makeText(this, R.string.local_service_stopped, Toast.LENGTH_SHORT).show();
@@ -79,6 +84,10 @@ public class LocalService extends Service {
     // This is the object that receives interactions from clients.  See
     // RemoteService for a more complete example.
     private final IBinder mBinder = new LocalBinder();
+
+    public boolean isPlaying() {
+        return isPlaying;
+    }
 
     /**
      * Show a notification while this service is running.
@@ -104,21 +113,20 @@ public class LocalService extends Service {
     }
 
 	public void play() {
-		playState = true;
-		if (null != playThread) {
+		isPlaying = true;
+		if (playThread != null) {
 			stop();
 		}
         Toast.makeText(this, R.string.local_service_playing, Toast.LENGTH_SHORT).show();
-		playThread = new PulseSoundThread(server, port);
-        playThread.wl = wl;
+		playThread = new PulseSoundThread(server, port, wakeLock);
 		new Thread(playThread).start();
 	}
 
 	public void stop() {
-		playState = false;
+		isPlaying = false;
         Toast.makeText(this, R.string.local_service_paused, Toast.LENGTH_SHORT).show();
-		if (null != playThread) {
-			playThread.Terminate();
+		if (playThread != null) {
+			playThread.terminate();
 			playThread = null;
 		}
 	}
