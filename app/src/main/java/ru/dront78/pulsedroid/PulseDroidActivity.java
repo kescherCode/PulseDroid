@@ -91,23 +91,23 @@ public class PulseDroidActivity extends AppCompatActivity {
         doUnbindService();
     }
 
-	private void doBindService() {
-		// Establish a connection with the service.  We use an explicit
-		// class name because we want a specific service implementation that
-		// we know will be running in our own process (and thus won't be
-		// supporting component replacement by other applications).
-		bindService(new Intent(PulseDroidActivity.this, PulsePlaybackService.class),
-				mConnection, Context.BIND_AUTO_CREATE);
-		isBound = true;
-	}
+    private void doBindService() {
+        // Establish a connection with the service.  We use an explicit
+        // class name because we want a specific service implementation that
+        // we know will be running in our own process (and thus won't be
+        // supporting component replacement by other applications).
+        bindService(new Intent(PulseDroidActivity.this, PulsePlaybackService.class),
+                mConnection, Context.BIND_AUTO_CREATE);
+        isBound = true;
+    }
 
-	private void doUnbindService() {
-		if (isBound) {
-			// Detach our existing connection.
-			unbindService(mConnection);
-			isBound = false;
-		}
-	}
+    private void doUnbindService() {
+        if (isBound) {
+            // Detach our existing connection.
+            unbindService(mConnection);
+            isBound = false;
+        }
+    }
 
     private void updatePlayState(@Nullable PlayState playState) {
         if (playState == null) {
@@ -142,28 +142,28 @@ public class PulseDroidActivity extends AppCompatActivity {
         }
     }
 
-	public void play() {
-		final SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-		final EditText server = findViewById(R.id.EditTextServer);
-		final EditText port = findViewById(R.id.EditTextPort);
+    public void play() {
+        final SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        final EditText server = findViewById(R.id.EditTextServer);
+        final EditText port = findViewById(R.id.EditTextPort);
 
-		sharedPref.edit()
-				.putString("server", server.getText().toString())
-				.putString("port", port.getText().toString())
-				.putBoolean("auto_start", autoStartCheckBox.isChecked())
-				.apply();
+        sharedPref.edit()
+                .putString("server", server.getText().toString())
+                .putString("port", port.getText().toString())
+                .putBoolean("auto_start", autoStartCheckBox.isChecked())
+                .apply();
 
-		if (boundService != null) {
+        if (boundService != null) {
             boundService.port = port.getText().toString();
             boundService.server = server.getText().toString();
             boundService.play();
         }
-	}
+    }
 
-	public void stop() {
+    public void stop() {
         if (boundService != null) {
             boundService.stop();
         }
-	}
+    }
 
 }
