@@ -12,6 +12,7 @@ import android.util.Log;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PulsePlaybackWorker implements Runnable {
     private final String host;
@@ -21,7 +22,7 @@ public class PulsePlaybackWorker implements Runnable {
     private final Listener listener;
 
     private Throwable error;
-    private boolean stopped = false;
+    private AtomicBoolean stopped = new AtomicBoolean(false);
 
     PulsePlaybackWorker(String host, String port, WakeLock wakeLock, Handler handler, Listener listener) {
         this.host = host;
@@ -32,13 +33,13 @@ public class PulsePlaybackWorker implements Runnable {
     }
 
     public void stop() {
-        stopped = true;
+        stopped.set(true);
     }
 
     private void stopWithError(Throwable e) {
         Log.e(PulsePlaybackWorker.class.getSimpleName(), "stopWithError", e);
         error = e;
-        stopped = true;
+        stopped.set(true);
         handler.post(() -> listener.onPlaybackError(this, e));
     }
 
@@ -70,7 +71,7 @@ public class PulsePlaybackWorker implements Runnable {
             // TODO buffer size computation
             byte[] audioBuffer = new byte[musicLength * 8];
 
-            while (!stopped) {
+            while (!stopped.get()) {
                 wakeLock.acquire(1000);
                 int sizeRead = audioData.read(audioBuffer, 0, musicLength * 8);
                 int sizeWrite = audioTrack.write(audioBuffer, 0, sizeRead);
