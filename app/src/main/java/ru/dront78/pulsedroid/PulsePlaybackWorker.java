@@ -9,8 +9,8 @@ import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Socket;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -48,11 +48,12 @@ public class PulsePlaybackWorker implements Runnable {
     }
 
     public void run() {
-        BufferedInputStream audioData = null;
+        Socket sock = null;
+        InputStream audioData = null;
         AudioTrack audioTrack = null;
         try {
-            Socket sock = new Socket(host, port);
-            audioData = new BufferedInputStream(sock.getInputStream());
+            sock = new Socket(host, port);
+            audioData = sock.getInputStream();
 
             // TODO native audio?
             final int sampleRate = 48000;
@@ -93,15 +94,22 @@ public class PulsePlaybackWorker implements Runnable {
         } catch (Exception e) {
             stopWithError(e);
         } finally {
-            if (audioTrack != null) {
-                audioTrack.stop();
-            }
             if (audioData != null) {
                 try {
                     audioData.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+            }
+            if (sock != null) {
+                try {
+                    sock.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (audioTrack != null) {
+                audioTrack.stop();
             }
         }
     }
