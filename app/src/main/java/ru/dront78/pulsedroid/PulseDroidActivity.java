@@ -36,7 +36,7 @@ public class PulseDroidActivity extends AppCompatActivity {
             boundService.playState().observe(PulseDroidActivity.this,
                     playState -> updatePlayState(playState));
 
-            if (autoStartCheckBox.isChecked()) {
+            if (autoStartCheckBox.isChecked() && boundService.isStartable()) {
                 play();
             }
         }
