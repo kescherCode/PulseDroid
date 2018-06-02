@@ -93,10 +93,10 @@ public class LocalService extends Service {
 
         // Set the icon, scrolling text and timestamp
         Notification notification = new NotificationCompat.Builder(this, getString(R.string.service_notification_channel))
-                .setContentTitle("PulseDroid")
                 .setContentText(text)
                 .setContentTitle(getText(R.string.local_service_label))
                 .setContentIntent(contentIntent)
+                .setSmallIcon(R.drawable.ic_pulse)
                 .build();
 
         // Send the notification.
