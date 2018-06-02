@@ -48,7 +48,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
     @Override
     public void onCreate() {
         handler = new Handler();
-        notifManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        notifManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         playState.setValue(PlayState.STOPPED);
 
         // Display a notification about us starting.  We put an icon in the status bar.
@@ -59,7 +59,9 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
                 .setSmallIcon(R.drawable.ic_pulse)
                 .build();
         startForeground(NOTIFICATION, notification);
+
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        assert pm != null;
         wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "pulse");
     }
 
