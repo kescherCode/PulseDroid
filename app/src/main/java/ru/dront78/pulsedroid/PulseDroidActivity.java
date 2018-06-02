@@ -13,7 +13,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 
 public class PulseDroidActivity extends AppCompatActivity {
@@ -34,10 +33,6 @@ public class PulseDroidActivity extends AppCompatActivity {
             // cast its IBinder to a concrete class and directly access it.
             boundService = ((PulsePlaybackService.LocalBinder) service).getService();
 
-            // Tell the user about this for our demo.
-            Toast.makeText(PulseDroidActivity.this, R.string.local_service_connected,
-                    Toast.LENGTH_SHORT).show();
-
             boundService.playState().observe(PulseDroidActivity.this,
                     playState -> updatePlayState(playState));
 
@@ -54,9 +49,6 @@ public class PulseDroidActivity extends AppCompatActivity {
             // Because it is running in our same process, we should never
             // see this happen.
             boundService = null;
-
-            Toast.makeText(PulseDroidActivity.this, R.string.local_service_disconnected,
-                    Toast.LENGTH_SHORT).show();
         }
     };
 
