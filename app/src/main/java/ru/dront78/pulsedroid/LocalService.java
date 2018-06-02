@@ -1,16 +1,17 @@
 package ru.dront78.pulsedroid;
 
+import android.app.Notification;
 import android.app.Service;
 import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.Binder;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
-import android.app.Notification;
 import android.app.PendingIntent;
-import ru.dront78.pulsedroid.PulseDroid;
-import android.os.PowerManager.WakeLock;
+
 import android.os.PowerManager;
 
 public class LocalService extends Service {
@@ -43,10 +44,10 @@ public class LocalService extends Service {
 
         // Display a notification about us starting.  We put an icon in the status bar.
         showNotification();
-        Notification notification = new Notification.Builder(this)
-			.setContentTitle("PulseDroid")
-			.setContentText("Pulse Running")
-			.build();
+        Notification notification = new NotificationCompat.Builder(this, getString(R.string.service_notification_channel))
+                .setContentTitle("PulseDroid")
+                .setContentText("Pulse Running")
+                .build();
         startForeground(NOTIFICATION, notification);
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "pulse");
@@ -86,19 +87,17 @@ public class LocalService extends Service {
         // In this sample, we'll use the same text for the ticker and the expanded notification
         CharSequence text = getText(R.string.local_service_started);
 
-        // Set the icon, scrolling text and timestamp
-        Notification notification = new Notification.Builder(this)
-			.setContentTitle("PulseDroid")
-			.setContentText(text)
-			.build();
-
         // The PendingIntent to launch our activity if the user selects this notification
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-																new Intent(this, PulseDroid.class), 0);
+                new Intent(this, PulseDroid.class), 0);
 
-        // Set the info for the views that show in the notification panel.
-        notification.setLatestEventInfo(this, getText(R.string.local_service_label),
-										text, contentIntent);
+        // Set the icon, scrolling text and timestamp
+        Notification notification = new NotificationCompat.Builder(this, getString(R.string.service_notification_channel))
+                .setContentTitle("PulseDroid")
+                .setContentText(text)
+                .setContentTitle(getText(R.string.local_service_label))
+                .setContentIntent(contentIntent)
+                .build();
 
         // Send the notification.
         mNM.notify(NOTIFICATION, notification);

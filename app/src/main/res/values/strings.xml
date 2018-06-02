@@ -9,4 +9,5 @@
     <string name="local_service_label">Pulsedroid Music</string>
     <string name="local_service_connected">Pulsedroid Music Connected</string>
     <string name="local_service_disconnected">Pulsedroid Music Disconnected</string>
+    <string name="service_notification_channel">pulsedroid_service</string>
 </resources>
