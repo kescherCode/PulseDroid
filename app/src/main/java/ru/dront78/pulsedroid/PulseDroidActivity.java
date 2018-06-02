@@ -87,7 +87,7 @@ public class PulseDroidActivity extends AppCompatActivity {
 
         findViewById(R.id.ButtonExit).setOnClickListener(v -> {
             stop();
-            moveTaskToBack(true);
+            finish();
         });
 
         doBindService();
