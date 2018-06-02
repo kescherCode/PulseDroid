@@ -50,47 +50,6 @@ public class PulseDroid extends Activity {
             }
         };
 
-    void doBindService() {
-        // Establish a connection with the service.  We use an explicit
-        // class name because we want a specific service implementation that
-        // we know will be running in our own process (and thus won't be
-        // supporting component replacement by other applications).
-        bindService(new Intent(PulseDroid.this, LocalService.class),
-                mConnection, Context.BIND_AUTO_CREATE);
-        mIsBound = true;
-    }
-
-    void doUnbindService() {
-        if (mIsBound) {
-            // Detach our existing connection.
-            unbindService(mConnection);
-            mIsBound = false;
-        }
-    }
-
-    public void play() {
-        final Button playButton = findViewById(R.id.ButtonPlay);
-        final SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        final EditText server = findViewById(R.id.EditTextServer);
-        final EditText port = findViewById(R.id.EditTextPort);
-
-        sharedPref.edit()
-                .putString("server", server.getText().toString())
-                .putString("port", port.getText().toString())
-                .putBoolean("auto_start", autoStartCheckBox.isChecked())
-                .apply();
-        mBoundService.port = port.getText().toString();
-        mBoundService.server = server.getText().toString();
-
-        playButton.setText(R.string.btn_stop);
-        mBoundService.play();
-    }
-
-    public void stop() {
-        playButton.setText(R.string.btn_play);
-        mBoundService.stop();
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -134,5 +93,46 @@ public class PulseDroid extends Activity {
         super.onDestroy();
         doUnbindService();
     }
+
+	void doBindService() {
+		// Establish a connection with the service.  We use an explicit
+		// class name because we want a specific service implementation that
+		// we know will be running in our own process (and thus won't be
+		// supporting component replacement by other applications).
+		bindService(new Intent(PulseDroid.this, LocalService.class),
+				mConnection, Context.BIND_AUTO_CREATE);
+		mIsBound = true;
+	}
+
+	void doUnbindService() {
+		if (mIsBound) {
+			// Detach our existing connection.
+			unbindService(mConnection);
+			mIsBound = false;
+		}
+	}
+
+	public void play() {
+		final Button playButton = findViewById(R.id.ButtonPlay);
+		final SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+		final EditText server = findViewById(R.id.EditTextServer);
+		final EditText port = findViewById(R.id.EditTextPort);
+
+		sharedPref.edit()
+				.putString("server", server.getText().toString())
+				.putString("port", port.getText().toString())
+				.putBoolean("auto_start", autoStartCheckBox.isChecked())
+				.apply();
+		mBoundService.port = port.getText().toString();
+		mBoundService.server = server.getText().toString();
+
+		playButton.setText(R.string.btn_stop);
+		mBoundService.play();
+	}
+
+	public void stop() {
+		playButton.setText(R.string.btn_play);
+		mBoundService.stop();
+	}
 
 }

@@ -66,9 +66,10 @@ public class LocalService extends Service {
     @Override
     public void onDestroy() {
         // Cancel the persistent notification.
-        mNM.cancel(NOTIFICATION);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(true);
+        } else {
+            mNM.cancel(NOTIFICATION);
         }
 
         // Tell the user we stopped.
@@ -126,7 +127,7 @@ public class LocalService extends Service {
         isPlaying = false;
         Toast.makeText(this, R.string.local_service_paused, Toast.LENGTH_SHORT).show();
         if (playThread != null) {
-            playThread.terminate();
+            playThread.stop();
             playThread = null;
         }
     }
