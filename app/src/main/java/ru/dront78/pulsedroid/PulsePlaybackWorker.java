@@ -55,26 +55,25 @@ public class PulsePlaybackWorker implements Runnable {
             sock = new Socket(host, port);
             audioData = sock.getInputStream();
 
-            // TODO native audio?
             final int sampleRate = 48000;
 
-            int musicLength = AudioTrack.getMinBufferSize(sampleRate,
+            final int bufferSize = AudioTrack.getMinBufferSize(sampleRate,
                     AudioFormat.CHANNEL_CONFIGURATION_STEREO,
                     AudioFormat.ENCODING_PCM_16BIT);
+
             audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
                     sampleRate, AudioFormat.CHANNEL_CONFIGURATION_STEREO,
-                    AudioFormat.ENCODING_PCM_16BIT, musicLength,
+                    AudioFormat.ENCODING_PCM_16BIT, bufferSize,
                     AudioTrack.MODE_STREAM);
             audioTrack.play();
 
             boolean started = false;
 
-            // TODO buffer size computation
-            byte[] audioBuffer = new byte[musicLength * 8];
+            byte[] audioBuffer = new byte[bufferSize];
 
             while (!stopped.get()) {
                 wakeLock.acquire(1000);
-                int sizeRead = audioData.read(audioBuffer, 0, musicLength * 8);
+                int sizeRead = audioData.read(audioBuffer, 0, bufferSize);
                 int sizeWrite = audioTrack.write(audioBuffer, 0, sizeRead);
                 if (sizeWrite == AudioTrack.ERROR_INVALID_OPERATION) {
                     sizeWrite = 0;
