@@ -19,10 +19,10 @@ public class LocalService extends Service {
     private NotificationManager mNM;
 
     PowerManager.WakeLock wakeLock = null;
-	public String server = "";
-	public String port = "";
-	private PulseSoundThread playThread = null;
-	private boolean isPlaying = false;
+    public String server = "";
+    public String port = "";
+    private PulseSoundThread playThread = null;
+    private boolean isPlaying = false;
 
     // Unique Identification Number for the Notification.
     // We use it on Notification start, and to cancel it.
@@ -73,7 +73,7 @@ public class LocalService extends Service {
 
         // Tell the user we stopped.
         Toast.makeText(this, R.string.local_service_stopped, Toast.LENGTH_SHORT).show();
-		stop();
+        stop();
     }
 
     @Override
@@ -112,23 +112,23 @@ public class LocalService extends Service {
         mNM.notify(NOTIFICATION, notification);
     }
 
-	public void play() {
-		isPlaying = true;
-		if (playThread != null) {
-			stop();
-		}
+    public void play() {
+        isPlaying = true;
+        if (playThread != null) {
+            stop();
+        }
         Toast.makeText(this, R.string.local_service_playing, Toast.LENGTH_SHORT).show();
-		playThread = new PulseSoundThread(server, port, wakeLock);
-		new Thread(playThread).start();
-	}
+        playThread = new PulseSoundThread(server, port, wakeLock);
+        new Thread(playThread).start();
+    }
 
-	public void stop() {
-		isPlaying = false;
+    public void stop() {
+        isPlaying = false;
         Toast.makeText(this, R.string.local_service_paused, Toast.LENGTH_SHORT).show();
-		if (playThread != null) {
-			playThread.terminate();
-			playThread = null;
-		}
-	}
+        if (playThread != null) {
+            playThread.terminate();
+            playThread = null;
+        }
+    }
 
 }

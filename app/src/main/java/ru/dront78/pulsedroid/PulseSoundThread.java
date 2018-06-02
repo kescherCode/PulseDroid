@@ -12,47 +12,47 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 public class PulseSoundThread implements Runnable {
-	private boolean mTerminate = false;
-	private String mServer;
-	private int mPort;
+    private boolean mTerminate = false;
+    private String mServer;
+    private int mPort;
     private final WakeLock wakeLock;
-	private Throwable error;
+    private Throwable error;
 
-	PulseSoundThread(String Server, String Port, WakeLock wl) {
-		mServer = Server;
-		mPort = Integer.valueOf(Port);
-		wakeLock = wl;
-	}
+    PulseSoundThread(String Server, String Port, WakeLock wl) {
+        mServer = Server;
+        mPort = Integer.valueOf(Port);
+        wakeLock = wl;
+    }
 
-	public void terminate() {
-		mTerminate = true;
-	}
+    public void terminate() {
+        mTerminate = true;
+    }
 
-	public void run() {
-		Socket sock;
-		BufferedInputStream audioData = null;
-		try {
-			sock = new Socket(mServer, mPort);
-		} catch (UnknownHostException e) {
-			// TODO if the host name could not be resolved into an IP address.
-			terminate();
-			e.printStackTrace();
-			error = e;
-			return;
-		} catch (IOException e) {
-			// TODO if an error occurs while creating the socket
-			terminate();
-			e.printStackTrace();
-			error = e;
-			return;
-		} catch (SecurityException e) {
-			// TODO if a security manager exists and it denies the permission to
-			// connect to the given address and port.
-			terminate();
-			e.printStackTrace();
-			error = e;
-			return;
-		}
+    public void run() {
+        Socket sock;
+        BufferedInputStream audioData = null;
+        try {
+            sock = new Socket(mServer, mPort);
+        } catch (UnknownHostException e) {
+            // TODO if the host name could not be resolved into an IP address.
+            terminate();
+            e.printStackTrace();
+            error = e;
+            return;
+        } catch (IOException e) {
+            // TODO if an error occurs while creating the socket
+            terminate();
+            e.printStackTrace();
+            error = e;
+            return;
+        } catch (SecurityException e) {
+            // TODO if a security manager exists and it denies the permission to
+            // connect to the given address and port.
+            terminate();
+            e.printStackTrace();
+            error = e;
+            return;
+        }
 
         try {
             audioData = new BufferedInputStream(sock.getInputStream());
@@ -68,24 +68,24 @@ public class PulseSoundThread implements Runnable {
             return;
         }
 
-		// Create AudioPlayer
-		/*
-		 * final int sampleRate = AudioTrack
-		 * .getNativeOutputSampleRate(AudioManager.STREAM_MUSIC);
-		 */
-		// TODO native audio?
-		final int sampleRate = 48000;
+        // Create AudioPlayer
+        /*
+         * final int sampleRate = AudioTrack
+         * .getNativeOutputSampleRate(AudioManager.STREAM_MUSIC);
+         */
+        // TODO native audio?
+        final int sampleRate = 48000;
 
-		int musicLength = AudioTrack.getMinBufferSize(sampleRate,
-				AudioFormat.CHANNEL_CONFIGURATION_STEREO,
-				AudioFormat.ENCODING_PCM_16BIT);
-		AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
-				sampleRate, AudioFormat.CHANNEL_CONFIGURATION_STEREO,
-				AudioFormat.ENCODING_PCM_16BIT, musicLength,
-				AudioTrack.MODE_STREAM);
-		audioTrack.play();
+        int musicLength = AudioTrack.getMinBufferSize(sampleRate,
+                AudioFormat.CHANNEL_CONFIGURATION_STEREO,
+                AudioFormat.ENCODING_PCM_16BIT);
+        AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
+                sampleRate, AudioFormat.CHANNEL_CONFIGURATION_STEREO,
+                AudioFormat.ENCODING_PCM_16BIT, musicLength,
+                AudioTrack.MODE_STREAM);
+        audioTrack.play();
 
-		try {
+        try {
             // TODO buffer size computation
             byte[] audioBuffer = new byte[musicLength * 8];
 
@@ -112,5 +112,5 @@ public class PulseSoundThread implements Runnable {
         } finally {
             audioTrack.stop();
         }
-	}
+    }
 }
