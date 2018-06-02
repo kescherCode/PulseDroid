@@ -1,6 +1,5 @@
 package ru.dront78.pulsedroid;
 
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -16,7 +15,6 @@ import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 import android.widget.Toast;
 
 public class PulsePlaybackService extends Service implements PulsePlaybackWorker.Listener {
@@ -25,7 +23,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
      */
     private static final int NOTIFICATION = R.string.local_service_started;
 
-    private final IBinder mBinder = new LocalBinder();
+    private final IBinder binder = new LocalBinder();
 
     private Handler handler = new Handler();
     private NotificationManager notifManager;
@@ -42,7 +40,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
 
     @Override
     public IBinder onBind(Intent intent) {
-        return mBinder;
+        return binder;
     }
 
     @Override
@@ -51,15 +49,6 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
         notifManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         playState.setValue(PlayState.STOPPED);
 
-        // Display a notification about us starting.  We put an icon in the status bar.
-        showNotification();
-        Notification notification = new NotificationCompat.Builder(this, getString(R.string.service_notification_channel))
-                .setContentTitle("PulseDroidActivity")
-                .setContentText("Pulse Running")
-                .setSmallIcon(R.drawable.ic_pulse)
-                .build();
-        startForeground(NOTIFICATION, notification);
-
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         assert pm != null;
         wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "pulse");
@@ -67,10 +56,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i("PulsePlaybackService", "Received start id " + startId + ": " + intent);
-        // We want this service to continue running until it is explicitly
-        // stopped, so return sticky.
-        return START_STICKY;
+        return START_NOT_STICKY;
     }
 
     @Override
@@ -91,6 +77,8 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
     public void onPlaybackError(@NonNull PulsePlaybackWorker worker, @NonNull Throwable t) {
         if (worker == playWorker) {
             playState.setValue(PlayState.STOPPED);
+            stopForeground(true);
+            stopSelf();
         }
     }
 
@@ -105,30 +93,21 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
     public void onPlaybackStopped(@NonNull PulsePlaybackWorker worker) {
         if (worker == playWorker) {
             playState.setValue(PlayState.STOPPED);
+            stopForeground(true);
+            stopSelf();
         }
     }
 
-    /**
-     * Show a notification while this service is running.
-     */
-    private void showNotification() {
-        // In this sample, we'll use the same text for the ticker and the expanded notification
-        CharSequence text = getText(R.string.local_service_started);
-
+    private NotificationCompat.Builder buildNotification() {
         // The PendingIntent to launch our activity if the user selects this notification
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
                 new Intent(this, PulseDroidActivity.class), 0);
 
         // Set the icon, scrolling text and timestamp
-        Notification notification = new NotificationCompat.Builder(this, getString(R.string.service_notification_channel))
-                .setContentText(text)
+        return new NotificationCompat.Builder(this, getString(R.string.service_notification_channel))
                 .setContentTitle(getText(R.string.local_service_label))
                 .setContentIntent(contentIntent)
-                .setSmallIcon(R.drawable.ic_pulse)
-                .build();
-
-        // Send the notification.
-        notifManager.notify(NOTIFICATION, notification);
+                .setSmallIcon(R.drawable.ic_pulse);
     }
 
     public void play() {
@@ -142,6 +121,12 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
         Toast.makeText(this, R.string.local_service_playing, Toast.LENGTH_SHORT).show();
         playWorker = new PulsePlaybackWorker(server, port, wakeLock, handler, this);
         new Thread(playWorker).start();
+
+        startForeground(NOTIFICATION, buildNotification()
+                .setContentText(getText(R.string.local_service_started))
+                .build());
+        // allow running in the background when service gets unbound
+        startService(new Intent(this, PulsePlaybackService.class));
     }
 
     public void stop() {

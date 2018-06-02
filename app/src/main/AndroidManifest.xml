@@ -24,7 +24,6 @@
         </activity>
         <service
             android:name=".PulsePlaybackService"
-            android:label="PulseDroidMusic"
-            android:permission="string" />
+            android:label="@string/local_service_label" />
     </application>
 </manifest>
