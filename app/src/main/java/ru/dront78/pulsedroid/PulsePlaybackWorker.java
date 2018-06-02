@@ -11,9 +11,7 @@ import android.util.Log;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 public class PulsePlaybackWorker implements Runnable {
     private final String host;
@@ -49,57 +47,26 @@ public class PulsePlaybackWorker implements Runnable {
     }
 
     public void run() {
-        Socket sock;
-        BufferedInputStream audioData;
+        BufferedInputStream audioData = null;
+        AudioTrack audioTrack = null;
         try {
-            sock = new Socket(host, port);
-        } catch (UnknownHostException e) {
-            // TODO if the host name could not be resolved into an IP address.
-            stopWithError(e);
-            return;
-        } catch (IOException e) {
-            // TODO if an error occurs while creating the socket
-            stopWithError(e);
-            return;
-        } catch (SecurityException e) {
-            // TODO if a security manager exists and it denies the permission to
-            // connect to the given address and port.
-            stopWithError(e);
-            return;
-        }
-
-        try {
+            Socket sock = new Socket(host, port);
             audioData = new BufferedInputStream(sock.getInputStream());
-        } catch (UnsupportedEncodingException e) {
-            // TODO Auto-generated catch block
-            stopWithError(e);
-            return;
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            stopWithError(e);
-            return;
-        }
 
-        // Create AudioPlayer
-        /*
-         * final int sampleRate = AudioTrack
-         * .getNativeOutputSampleRate(AudioManager.STREAM_MUSIC);
-         */
-        // TODO native audio?
-        final int sampleRate = 48000;
+            // TODO native audio?
+            final int sampleRate = 48000;
 
-        int musicLength = AudioTrack.getMinBufferSize(sampleRate,
-                AudioFormat.CHANNEL_CONFIGURATION_STEREO,
-                AudioFormat.ENCODING_PCM_16BIT);
-        AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
-                sampleRate, AudioFormat.CHANNEL_CONFIGURATION_STEREO,
-                AudioFormat.ENCODING_PCM_16BIT, musicLength,
-                AudioTrack.MODE_STREAM);
-        audioTrack.play();
+            int musicLength = AudioTrack.getMinBufferSize(sampleRate,
+                    AudioFormat.CHANNEL_CONFIGURATION_STEREO,
+                    AudioFormat.ENCODING_PCM_16BIT);
+            audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
+                    sampleRate, AudioFormat.CHANNEL_CONFIGURATION_STEREO,
+                    AudioFormat.ENCODING_PCM_16BIT, musicLength,
+                    AudioTrack.MODE_STREAM);
+            audioTrack.play();
 
-        boolean started = false;
+            boolean started = false;
 
-        try {
             // TODO buffer size computation
             byte[] audioBuffer = new byte[musicLength * 8];
 
@@ -122,10 +89,19 @@ public class PulsePlaybackWorker implements Runnable {
             }
 
             handler.post(() -> listener.onPlaybackStopped(this));
-        } catch (IOException e) {
+        } catch (Exception e) {
             stopWithError(e);
         } finally {
-            audioTrack.stop();
+            if (audioTrack != null) {
+                audioTrack.stop();
+            }
+            if (audioData != null) {
+                try {
+                    audioData.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
