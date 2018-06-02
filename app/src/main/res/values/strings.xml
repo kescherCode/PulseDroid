@@ -10,6 +10,13 @@
     <string name="local_service_connected">Pulsedroid Music Connected</string>
     <string name="local_service_disconnected">Pulsedroid Music Disconnected</string>
     <string name="service_notification_channel">pulsedroid_service</string>
-    <string name="btn_stop">Stop</string>
     <string name="btn_play">Play</string>
+    <string name="btn_starting">Starting…</string>
+    <string name="btn_stop">Stop</string>
+    <string name="btn_stopping">Stopping…</string>
+    <string name="btn_waiting">Waiting…</string>
+    <string name="btn_exit">Exit</string>
+    <string name="input_port">Port</string>
+    <string name="input_host">Host</string>
+    <string name="play_error">Playback error: %1$s</string>
 </resources>

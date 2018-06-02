@@ -1,37 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	          android:orientation="vertical" android:layout_width="fill_parent"
-	          android:layout_height="fill_parent">
-  <LinearLayout android:layout_height="wrap_content"
-		        android:orientation="horizontal" android:layout_width="fill_parent"
-		        android:id="@+id/LinearLayoutServer">
-	<TextView android:layout_height="wrap_content" android:text="Server"
-			  android:layout_width="fill_parent" android:layout_weight="0.7"
-			  android:id="@+id/TextViewServer"></TextView>
-	<EditText android:layout_height="wrap_content"
-			  android:layout_width="fill_parent" android:layout_weight="0.3"
-			  android:id="@+id/EditTextServer" android:saveEnabled="true"></EditText>
-  </LinearLayout>
-  <LinearLayout android:layout_height="wrap_content"
-		        android:layout_width="fill_parent" android:id="@+id/LinearLayoutPort">
-	<TextView android:layout_height="wrap_content"
-			  android:layout_width="fill_parent" android:layout_weight="0.7"
-			  android:text="Port" android:id="@+id/TextViewPort"></TextView>
-	<EditText android:layout_height="wrap_content"
-			  android:layout_width="fill_parent" android:layout_weight="0.3"
-			  android:id="@+id/EditTextPort" android:saveEnabled="true"
-			  android:typeface="normal"></EditText>
-  </LinearLayout>
-  <Button android:layout_height="wrap_content"
-		  android:layout_width="fill_parent" android:layout_gravity="bottom"
-		  android:text="Play!" android:id="@+id/ButtonPlay"></Button>
-  <Button android:layout_height="wrap_content" android:text="Exit"
-		  android:layout_width="fill_parent"
-          android:id="@+id/ButtonExit">
-  </Button>
-  <CheckBox android:id="@+id/auto_start"
-            android:layout_width="wrap_content"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/LinearLayoutServer"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/TextViewServer"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="@string/auto_start"
-            />
+            android:layout_weight="0.7"
+            android:text="@string/input_host" />
+
+        <EditText
+            android:id="@+id/EditTextServer"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.3"
+            android:hint="@string/input_host"
+            android:inputType="text"
+            android:saveEnabled="true" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/LinearLayoutPort"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/TextViewPort"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.7"
+            android:text="@string/input_port" />
+
+        <EditText
+            android:id="@+id/EditTextPort"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.3"
+            android:hint="@string/input_port"
+            android:inputType="number"
+            android:saveEnabled="true"
+            android:typeface="normal" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/ButtonPlay"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:text="@string/btn_waiting" />
+
+    <Button
+        android:id="@+id/ButtonExit"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_exit" />
+
+    <CheckBox
+        android:id="@+id/auto_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/auto_start" />
+
+    <TextView
+        android:id="@+id/errorText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="14dp"
+        android:paddingRight="14dp"
+        android:textColor="#d50000"
+        android:textSize="13sp" />
 </LinearLayout>

@@ -1,47 +1,55 @@
 package ru.dront78.pulsedroid;
 
 import android.app.Notification;
-import android.app.Service;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MutableLiveData;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
-import android.os.IBinder;
 import android.os.Binder;
+import android.os.Build;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.PowerManager;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
-import android.app.PendingIntent;
 
-import android.os.PowerManager;
-
-public class LocalService extends Service {
-    private NotificationManager mNM;
-
-    PowerManager.WakeLock wakeLock = null;
-    public String server = "";
-    public String port = "";
-    private PulseSoundThread playThread = null;
-    private boolean isPlaying = false;
-
-    // Unique Identification Number for the Notification.
-    // We use it on Notification start, and to cancel it.
-    private int NOTIFICATION = R.string.local_service_started;
-
+public class LocalService extends Service implements PulseSoundThread.Listener {
     /**
-     * Class for clients to access.  Because we know this service always
-     * runs in the same process as its clients, we don't need to deal with
-     * IPC.
+     * Unique Identification Number for the Notification.
      */
-    public class LocalBinder extends Binder {
-        LocalService getService() {
-            return LocalService.this;
-        }
+    private static final int NOTIFICATION = R.string.local_service_started;
+
+    private final IBinder mBinder = new LocalBinder();
+
+    private Handler handler = new Handler();
+    private NotificationManager notifManager;
+    private PowerManager.WakeLock wakeLock;
+
+    @NonNull
+    public String server = "";
+    @NonNull
+    public String port = "";
+    @Nullable
+    private PulseSoundThread playThread = null;
+
+    private final MutableLiveData<PlayState> playState = new MutableLiveData<>();
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mBinder;
     }
 
     @Override
     public void onCreate() {
-        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        handler = new Handler();
+        notifManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        playState.setValue(PlayState.STOPPED);
 
         // Display a notification about us starting.  We put an icon in the status bar.
         showNotification();
@@ -69,7 +77,7 @@ public class LocalService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(true);
         } else {
-            mNM.cancel(NOTIFICATION);
+            notifManager.cancel(NOTIFICATION);
         }
 
         // Tell the user we stopped.
@@ -78,16 +86,24 @@ public class LocalService extends Service {
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
-        return mBinder;
+    public void onPlaybackError(@NonNull PulseSoundThread thread, @NonNull Throwable t) {
+        if (thread == playThread) {
+            playState.setValue(PlayState.STOPPED);
+        }
     }
 
-    // This is the object that receives interactions from clients.  See
-    // RemoteService for a more complete example.
-    private final IBinder mBinder = new LocalBinder();
+    @Override
+    public void onPlaybackStarted(@NonNull PulseSoundThread thread) {
+        if (thread == playThread) {
+            playState.setValue(PlayState.STARTED);
+        }
+    }
 
-    public boolean isPlaying() {
-        return isPlaying;
+    @Override
+    public void onPlaybackStopped(@NonNull PulseSoundThread thread) {
+        if (thread == playThread) {
+            playState.setValue(PlayState.STOPPED);
+        }
     }
 
     /**
@@ -110,25 +126,61 @@ public class LocalService extends Service {
                 .build();
 
         // Send the notification.
-        mNM.notify(NOTIFICATION, notification);
+        notifManager.notify(NOTIFICATION, notification);
     }
 
     public void play() {
-        isPlaying = true;
-        if (playThread != null) {
-            stop();
+        if (!isStartable()) {
+            throw new IllegalStateException("Cannot start with playState == " + getPlayState());
         }
+        if (playThread != null) {
+            stopThread();
+        }
+        playState.setValue(PlayState.STARTING);
         Toast.makeText(this, R.string.local_service_playing, Toast.LENGTH_SHORT).show();
-        playThread = new PulseSoundThread(server, port, wakeLock);
+        playThread = new PulseSoundThread(server, port, wakeLock, handler, this);
         new Thread(playThread).start();
     }
 
     public void stop() {
-        isPlaying = false;
-        Toast.makeText(this, R.string.local_service_paused, Toast.LENGTH_SHORT).show();
+        if (getPlayState().isActive()) {
+            playState.setValue(PlayState.STOPPING);
+            Toast.makeText(this, R.string.local_service_paused, Toast.LENGTH_SHORT).show();
+        }
+        stopThread();
+    }
+
+    private void stopThread() {
         if (playThread != null) {
             playThread.stop();
-            playThread = null;
+        }
+    }
+
+    public boolean isStartable() {
+        return getPlayState() == PlayState.STOPPED;
+    }
+
+    public PlayState getPlayState() {
+        return playState.getValue();
+    }
+
+    @NonNull
+    public LiveData<PlayState> playState() {
+        return playState;
+    }
+
+    public Throwable getError() {
+        return playThread == null ? null : playThread.getError();
+    }
+
+    /**
+     * Class for clients to access.  Because we know this service always
+     * runs in the same process as its clients, we don't need to deal with
+     * IPC.
+     */
+    public class LocalBinder extends Binder {
+        LocalService getService() {
+            return LocalService.this;
         }
     }
 

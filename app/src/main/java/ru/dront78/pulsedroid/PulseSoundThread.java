@@ -3,7 +3,10 @@ package ru.dront78.pulsedroid;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.os.Handler;
 import android.os.PowerManager.WakeLock;
+import android.support.annotation.MainThread;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.io.BufferedInputStream;
@@ -13,16 +16,21 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 public class PulseSoundThread implements Runnable {
-    private String host;
-    private int port;
+    private final String host;
+    private final int port;
     private final WakeLock wakeLock;
+    private final Handler handler;
+    private final Listener listener;
+
     private Throwable error;
     private boolean stopped = false;
 
-    PulseSoundThread(String host, String port, WakeLock wakeLock) {
+    PulseSoundThread(String host, String port, WakeLock wakeLock, Handler handler, Listener listener) {
         this.host = host;
         this.port = Integer.valueOf(port);
         this.wakeLock = wakeLock;
+        this.handler = handler;
+        this.listener = listener;
     }
 
     public void stop() {
@@ -33,6 +41,11 @@ public class PulseSoundThread implements Runnable {
         Log.e(PulseSoundThread.class.getSimpleName(), "stopWithError", e);
         error = e;
         stopped = true;
+        handler.post(() -> listener.onPlaybackError(this, e));
+    }
+
+    public Throwable getError() {
+        return error;
     }
 
     public void run() {
@@ -84,6 +97,8 @@ public class PulseSoundThread implements Runnable {
                 AudioTrack.MODE_STREAM);
         audioTrack.play();
 
+        boolean started = false;
+
         try {
             // TODO buffer size computation
             byte[] audioBuffer = new byte[musicLength * 8];
@@ -100,12 +115,28 @@ public class PulseSoundThread implements Runnable {
                 }
                 if (sizeWrite < 0) {
                     stop();
+                } else if (!started) {
+                    started = true;
+                    handler.post(() -> listener.onPlaybackStarted(this));
                 }
             }
+
+            handler.post(() -> listener.onPlaybackStopped(this));
         } catch (IOException e) {
             stopWithError(e);
         } finally {
             audioTrack.stop();
         }
+    }
+
+    public interface Listener {
+        @MainThread
+        void onPlaybackError(@NonNull PulseSoundThread thread, @NonNull Throwable t);
+
+        @MainThread
+        void onPlaybackStarted(@NonNull PulseSoundThread thread);
+
+        @MainThread
+        void onPlaybackStopped(@NonNull PulseSoundThread thread);
     }
 }
