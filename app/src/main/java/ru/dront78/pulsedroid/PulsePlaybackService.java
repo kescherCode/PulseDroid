@@ -21,7 +21,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
     /**
      * Unique Identification Number for the Notification.
      */
-    private static final int NOTIFICATION = R.string.local_service_started;
+    private static final int NOTIFICATION = R.string.playback_service_started;
 
     private final IBinder binder = new LocalBinder();
 
@@ -69,7 +69,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
         }
 
         // Tell the user we stopped.
-        Toast.makeText(this, R.string.local_service_stopped, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.playback_service_stopped, Toast.LENGTH_SHORT).show();
         stop();
     }
 
@@ -105,7 +105,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
 
         // Set the icon, scrolling text and timestamp
         return new NotificationCompat.Builder(this, getString(R.string.service_notification_channel))
-                .setContentTitle(getText(R.string.local_service_label))
+                .setContentTitle(getText(R.string.playback_service_label))
                 .setContentIntent(contentIntent)
                 .setSmallIcon(R.drawable.ic_pulse);
     }
@@ -118,12 +118,12 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
             stopWorker();
         }
         playState.setValue(PlayState.STARTING);
-        Toast.makeText(this, R.string.local_service_playing, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.playback_service_playing, Toast.LENGTH_SHORT).show();
         playWorker = new PulsePlaybackWorker(server, port, wakeLock, handler, this);
         new Thread(playWorker).start();
 
         startForeground(NOTIFICATION, buildNotification()
-                .setContentText(getText(R.string.local_service_started))
+                .setContentText(getText(R.string.playback_service_started))
                 .build());
         // allow running in the background when service gets unbound
         startService(new Intent(this, PulsePlaybackService.class));
@@ -132,7 +132,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
     public void stop() {
         if (getPlayState().isActive()) {
             playState.setValue(PlayState.STOPPING);
-            Toast.makeText(this, R.string.local_service_paused, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.playback_service_paused, Toast.LENGTH_SHORT).show();
         }
         stopWorker();
     }
