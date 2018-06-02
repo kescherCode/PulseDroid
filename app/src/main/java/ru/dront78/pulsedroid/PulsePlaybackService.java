@@ -19,7 +19,7 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-public class LocalService extends Service implements PulseSoundThread.Listener {
+public class PulsePlaybackService extends Service implements PulsePlaybackWorker.Listener {
     /**
      * Unique Identification Number for the Notification.
      */
@@ -36,7 +36,7 @@ public class LocalService extends Service implements PulseSoundThread.Listener {
     @NonNull
     public String port = "";
     @Nullable
-    private PulseSoundThread playThread = null;
+    private PulsePlaybackWorker playWorker = null;
 
     private final MutableLiveData<PlayState> playState = new MutableLiveData<>();
 
@@ -54,7 +54,7 @@ public class LocalService extends Service implements PulseSoundThread.Listener {
         // Display a notification about us starting.  We put an icon in the status bar.
         showNotification();
         Notification notification = new NotificationCompat.Builder(this, getString(R.string.service_notification_channel))
-                .setContentTitle("PulseDroid")
+                .setContentTitle("PulseDroidActivity")
                 .setContentText("Pulse Running")
                 .setSmallIcon(R.drawable.ic_pulse)
                 .build();
@@ -65,7 +65,7 @@ public class LocalService extends Service implements PulseSoundThread.Listener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i("LocalService", "Received start id " + startId + ": " + intent);
+        Log.i("PulsePlaybackService", "Received start id " + startId + ": " + intent);
         // We want this service to continue running until it is explicitly
         // stopped, so return sticky.
         return START_STICKY;
@@ -86,22 +86,22 @@ public class LocalService extends Service implements PulseSoundThread.Listener {
     }
 
     @Override
-    public void onPlaybackError(@NonNull PulseSoundThread thread, @NonNull Throwable t) {
-        if (thread == playThread) {
+    public void onPlaybackError(@NonNull PulsePlaybackWorker worker, @NonNull Throwable t) {
+        if (worker == playWorker) {
             playState.setValue(PlayState.STOPPED);
         }
     }
 
     @Override
-    public void onPlaybackStarted(@NonNull PulseSoundThread thread) {
-        if (thread == playThread) {
+    public void onPlaybackStarted(@NonNull PulsePlaybackWorker worker) {
+        if (worker == playWorker) {
             playState.setValue(PlayState.STARTED);
         }
     }
 
     @Override
-    public void onPlaybackStopped(@NonNull PulseSoundThread thread) {
-        if (thread == playThread) {
+    public void onPlaybackStopped(@NonNull PulsePlaybackWorker worker) {
+        if (worker == playWorker) {
             playState.setValue(PlayState.STOPPED);
         }
     }
@@ -115,7 +115,7 @@ public class LocalService extends Service implements PulseSoundThread.Listener {
 
         // The PendingIntent to launch our activity if the user selects this notification
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                new Intent(this, PulseDroid.class), 0);
+                new Intent(this, PulseDroidActivity.class), 0);
 
         // Set the icon, scrolling text and timestamp
         Notification notification = new NotificationCompat.Builder(this, getString(R.string.service_notification_channel))
@@ -133,13 +133,13 @@ public class LocalService extends Service implements PulseSoundThread.Listener {
         if (!isStartable()) {
             throw new IllegalStateException("Cannot start with playState == " + getPlayState());
         }
-        if (playThread != null) {
-            stopThread();
+        if (playWorker != null) {
+            stopWorker();
         }
         playState.setValue(PlayState.STARTING);
         Toast.makeText(this, R.string.local_service_playing, Toast.LENGTH_SHORT).show();
-        playThread = new PulseSoundThread(server, port, wakeLock, handler, this);
-        new Thread(playThread).start();
+        playWorker = new PulsePlaybackWorker(server, port, wakeLock, handler, this);
+        new Thread(playWorker).start();
     }
 
     public void stop() {
@@ -147,12 +147,12 @@ public class LocalService extends Service implements PulseSoundThread.Listener {
             playState.setValue(PlayState.STOPPING);
             Toast.makeText(this, R.string.local_service_paused, Toast.LENGTH_SHORT).show();
         }
-        stopThread();
+        stopWorker();
     }
 
-    private void stopThread() {
-        if (playThread != null) {
-            playThread.stop();
+    private void stopWorker() {
+        if (playWorker != null) {
+            playWorker.stop();
         }
     }
 
@@ -170,7 +170,7 @@ public class LocalService extends Service implements PulseSoundThread.Listener {
     }
 
     public Throwable getError() {
-        return playThread == null ? null : playThread.getError();
+        return playWorker == null ? null : playWorker.getError();
     }
 
     /**
@@ -179,8 +179,8 @@ public class LocalService extends Service implements PulseSoundThread.Listener {
      * IPC.
      */
     public class LocalBinder extends Binder {
-        LocalService getService() {
-            return LocalService.this;
+        PulsePlaybackService getService() {
+            return PulsePlaybackService.this;
         }
     }
 

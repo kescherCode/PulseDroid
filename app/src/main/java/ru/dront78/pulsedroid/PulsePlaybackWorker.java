@@ -15,7 +15,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-public class PulseSoundThread implements Runnable {
+public class PulsePlaybackWorker implements Runnable {
     private final String host;
     private final int port;
     private final WakeLock wakeLock;
@@ -25,7 +25,7 @@ public class PulseSoundThread implements Runnable {
     private Throwable error;
     private boolean stopped = false;
 
-    PulseSoundThread(String host, String port, WakeLock wakeLock, Handler handler, Listener listener) {
+    PulsePlaybackWorker(String host, String port, WakeLock wakeLock, Handler handler, Listener listener) {
         this.host = host;
         this.port = Integer.valueOf(port);
         this.wakeLock = wakeLock;
@@ -38,7 +38,7 @@ public class PulseSoundThread implements Runnable {
     }
 
     private void stopWithError(Throwable e) {
-        Log.e(PulseSoundThread.class.getSimpleName(), "stopWithError", e);
+        Log.e(PulsePlaybackWorker.class.getSimpleName(), "stopWithError", e);
         error = e;
         stopped = true;
         handler.post(() -> listener.onPlaybackError(this, e));
@@ -131,12 +131,12 @@ public class PulseSoundThread implements Runnable {
 
     public interface Listener {
         @MainThread
-        void onPlaybackError(@NonNull PulseSoundThread thread, @NonNull Throwable t);
+        void onPlaybackError(@NonNull PulsePlaybackWorker worker, @NonNull Throwable t);
 
         @MainThread
-        void onPlaybackStarted(@NonNull PulseSoundThread thread);
+        void onPlaybackStarted(@NonNull PulsePlaybackWorker worker);
 
         @MainThread
-        void onPlaybackStopped(@NonNull PulseSoundThread thread);
+        void onPlaybackStopped(@NonNull PulsePlaybackWorker worker);
     }
 }

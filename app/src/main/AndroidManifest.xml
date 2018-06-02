@@ -14,7 +14,7 @@
         android:theme="@style/Theme.AppCompat.Light"
         tools:ignore="GoogleAppIndexingWarning">
         <activity
-            android:name=".PulseDroid"
+            android:name=".PulseDroidActivity"
             android:label="@string/app_name"
             android:launchMode="singleInstance">
             <intent-filter>
@@ -23,7 +23,7 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".LocalService"
+            android:name=".PulsePlaybackService"
             android:label="PulseDroidMusic"
             android:permission="string" />
     </application>

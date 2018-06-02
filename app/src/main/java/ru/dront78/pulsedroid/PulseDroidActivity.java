@@ -16,10 +16,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
-public class PulseDroid extends AppCompatActivity {
+public class PulseDroidActivity extends AppCompatActivity {
 
     private Button playButton = null;
-    private LocalService boundService;
+    private PulsePlaybackService boundService;
     private CheckBox autoStartCheckBox = null;
     private TextView errorText;
 
@@ -32,13 +32,13 @@ public class PulseDroid extends AppCompatActivity {
             // interact with the service.  Because we have bound to a explicit
             // service that we know is running in our own process, we can
             // cast its IBinder to a concrete class and directly access it.
-            boundService = ((LocalService.LocalBinder) service).getService();
+            boundService = ((PulsePlaybackService.LocalBinder) service).getService();
 
             // Tell the user about this for our demo.
-            Toast.makeText(PulseDroid.this, R.string.local_service_connected,
+            Toast.makeText(PulseDroidActivity.this, R.string.local_service_connected,
                     Toast.LENGTH_SHORT).show();
 
-            boundService.playState().observe(PulseDroid.this,
+            boundService.playState().observe(PulseDroidActivity.this,
                     playState -> updatePlayState(playState));
 
             if (autoStartCheckBox.isChecked()) {
@@ -47,7 +47,7 @@ public class PulseDroid extends AppCompatActivity {
         }
 
         public void onServiceDisconnected(ComponentName className) {
-            boundService.playState().removeObservers(PulseDroid.this);
+            boundService.playState().removeObservers(PulseDroidActivity.this);
 
             // This is called when the connection with the service has been
             // unexpectedly disconnected -- that is, its process crashed.
@@ -55,7 +55,7 @@ public class PulseDroid extends AppCompatActivity {
             // see this happen.
             boundService = null;
 
-            Toast.makeText(PulseDroid.this, R.string.local_service_disconnected,
+            Toast.makeText(PulseDroidActivity.this, R.string.local_service_disconnected,
                     Toast.LENGTH_SHORT).show();
         }
     };
@@ -104,7 +104,7 @@ public class PulseDroid extends AppCompatActivity {
 		// class name because we want a specific service implementation that
 		// we know will be running in our own process (and thus won't be
 		// supporting component replacement by other applications).
-		bindService(new Intent(PulseDroid.this, LocalService.class),
+		bindService(new Intent(PulseDroidActivity.this, PulsePlaybackService.class),
 				mConnection, Context.BIND_AUTO_CREATE);
 		isBound = true;
 	}
