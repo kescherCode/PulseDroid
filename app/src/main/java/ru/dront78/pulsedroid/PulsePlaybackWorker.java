@@ -78,12 +78,17 @@ public class PulsePlaybackWorker implements Runnable {
                     throw new IOException("Connection error: end of stream");
                 }
                 int sizeWrite = audioTrack.write(audioBuffer, 0, sizeRead);
+
+                // TODO make sense of this
                 if (sizeWrite == AudioTrack.ERROR_INVALID_OPERATION) {
+                    Log.w("Worker", "audioTrack.write(): INVALID_OPERATION");
                     sizeWrite = 0;
                 }
                 if (sizeWrite == AudioTrack.ERROR_BAD_VALUE) {
+                    Log.w("Worker", "audioTrack.write(): BAD_VALUE");
                     sizeWrite = 0;
                 }
+
                 if (sizeWrite < 0) {
                     stopWithError(new IOException("audioTrack.write() returned " + sizeWrite));
                 } else if (!started) {
