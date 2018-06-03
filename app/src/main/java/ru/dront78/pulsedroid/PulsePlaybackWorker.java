@@ -85,7 +85,7 @@ public class PulsePlaybackWorker implements Runnable {
                     sizeWrite = 0;
                 }
                 if (sizeWrite < 0) {
-                    stop();
+                    stopWithError(new IOException("audioTrack.write() returned " + sizeWrite));
                 } else if (!started) {
                     started = true;
                     handler.post(() -> listener.onPlaybackStarted(this));
