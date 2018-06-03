@@ -74,6 +74,9 @@ public class PulsePlaybackWorker implements Runnable {
             while (!stopped.get()) {
                 wakeLock.acquire(1000);
                 int sizeRead = audioData.read(audioBuffer, 0, bufferSize);
+                if (sizeRead < 0) {
+                    throw new IOException("Connection error: end of stream");
+                }
                 int sizeWrite = audioTrack.write(audioBuffer, 0, sizeRead);
                 if (sizeWrite == AudioTrack.ERROR_INVALID_OPERATION) {
                     sizeWrite = 0;
