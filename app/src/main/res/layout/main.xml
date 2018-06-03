@@ -8,7 +8,10 @@
         android:id="@+id/LinearLayoutServer"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingLeft="14dp"
+        android:paddingRight="14dp"
+        android:paddingTop="14dp">
 
         <TextView
             android:id="@+id/TextViewServer"
@@ -30,7 +33,9 @@
     <LinearLayout
         android:id="@+id/LinearLayoutPort"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:paddingLeft="14dp"
+        android:paddingRight="14dp">
 
         <TextView
             android:id="@+id/TextViewPort"
@@ -55,12 +60,15 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
+        android:layout_margin="14dp"
         android:text="@string/btn_waiting" />
 
     <CheckBox
         android:id="@+id/auto_start"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:paddingLeft="14dp"
+        android:paddingRight="14dp"
         android:text="@string/auto_start" />
 
     <TextView
