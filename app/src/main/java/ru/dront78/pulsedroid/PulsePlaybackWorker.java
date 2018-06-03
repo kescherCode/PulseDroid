@@ -115,16 +115,7 @@ public class PulsePlaybackWorker implements Runnable {
                     wantRead = Math.min(MAX_SOCKET_READ_LEN, Math.max(available, chunkSize));
                 }
 
-                while (bufPos < wantRead) {
-                    int n = audioData.read(audioBuffer, bufPos, wantRead - bufPos);
-                    if (n < 0) {
-                        if (bufPos == 0) {
-                            throw new IOException("Connection error: end of stream");
-                        }
-                        break;
-                    }
-                    bufPos += n;
-                }
+                bufPos += audioData.read(audioBuffer, bufPos, wantRead - bufPos);
 
                 int writeStart = numSkip;
                 // [& ~3]: Only try to write full sample-pairs.
@@ -134,6 +125,7 @@ public class PulsePlaybackWorker implements Runnable {
                 if (wantWrite > 0) {
                     sizeWrite = audioTrack.write(audioBuffer, writeStart, wantWrite);
                 }
+
                 if (sizeWrite < 0) {
                     stopWithError(new IOException("audioTrack.write() returned " + sizeWrite));
                 } else {
