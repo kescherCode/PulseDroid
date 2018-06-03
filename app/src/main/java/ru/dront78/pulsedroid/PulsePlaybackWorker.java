@@ -111,7 +111,11 @@ public class PulsePlaybackWorker implements Runnable {
                 }
             }
             if (audioTrack != null) {
-                audioTrack.stop();
+                // AudioTrack throws if we call stop() in stopped state. This happens if
+                // audioTrack.play() fails.
+                if (audioTrack.getPlayState() != AudioTrack.PLAYSTATE_STOPPED) {
+                    audioTrack.stop();
+                }
             }
         }
     }
