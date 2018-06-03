@@ -110,7 +110,7 @@ public class PulsePlaybackWorker implements Runnable {
                         numSkip = 0;
                     }
                     wantRead = Math.min(MAX_SOCKET_READ_LEN - bufPos, (int) (available - actual));
-                    Log.d("Worker", "skipped: available=" + available + " wantSkip=" + wantSkip + " actual=" + actual + " malign=" + malign + " numSkip=" + numSkip + " wantRead=" + wantRead + " bufPos=" + bufPos);
+                    Log.d("Worker", "skipped: wantSkip=" + wantSkip + " actual=" + actual + " numSkip=" + numSkip + " wantRead=" + wantRead + " bufPos=" + bufPos);
                     bufPos = 0;
                 } else {
                     // Read all if we already have more than chunkSize.
