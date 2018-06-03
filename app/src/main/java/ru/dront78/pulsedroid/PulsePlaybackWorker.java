@@ -15,6 +15,13 @@ import java.net.Socket;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PulsePlaybackWorker implements Runnable {
+
+    /**
+     * Maximum block that socket's {@code InputStream} seems to read regardless of the
+     * length parameter. If we try to read more than this, our alignment fails.
+     */
+    private static final int MAX_SOCKET_READ_LEN = 65536;
+
     private final String host;
     private final int port;
     private final WakeLock wakeLock;
@@ -52,48 +59,89 @@ public class PulsePlaybackWorker implements Runnable {
         InputStream audioData = null;
         AudioTrack audioTrack = null;
         try {
-            sock = new Socket(host, port);
-            audioData = sock.getInputStream();
-
             final int sampleRate = 48000;
+            // bytes per second = sample rate * 2 bytes per sample * 2 channels
+            final int byteRate = sampleRate * 2 * 2;
 
-            final int bufferSize = AudioTrack.getMinBufferSize(sampleRate,
+            final int minBufferSize = AudioTrack.getMinBufferSize(sampleRate,
                     AudioFormat.CHANNEL_CONFIGURATION_STEREO,
                     AudioFormat.ENCODING_PCM_16BIT);
 
+            // Use a 2-second buffer. Larger if system needs it.
+            final int bufferSize = Math.max(minBufferSize, byteRate * 2);
+
+            // Try to receive 4 times per second.
+            final int chunkSize = byteRate / 4;
+
+            sock = new Socket(host, port);
+            sock.setReceiveBufferSize(bufferSize);
+            audioData = sock.getInputStream();
+
+            // Always using minimum buffer size for minimum lag.
             audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
                     sampleRate, AudioFormat.CHANNEL_CONFIGURATION_STEREO,
-                    AudioFormat.ENCODING_PCM_16BIT, bufferSize,
+                    AudioFormat.ENCODING_PCM_16BIT, minBufferSize,
                     AudioTrack.MODE_STREAM);
             audioTrack.play();
 
             boolean started = false;
 
-            byte[] audioBuffer = new byte[bufferSize];
+            int bufPos = 0;
+            int numSkip = 0;
+            byte[] audioBuffer = new byte[MAX_SOCKET_READ_LEN];
 
             while (!stopped.get()) {
                 wakeLock.acquire(1000);
-                int sizeRead = audioData.read(audioBuffer, 0, bufferSize);
-                if (sizeRead < 0) {
-                    throw new IOException("Connection error: end of stream");
-                }
-                int sizeWrite = audioTrack.write(audioBuffer, 0, sizeRead);
 
-                // TODO make sense of this
-                if (sizeWrite == AudioTrack.ERROR_INVALID_OPERATION) {
-                    Log.w("Worker", "audioTrack.write(): INVALID_OPERATION");
-                    sizeWrite = 0;
+                final int available = audioData.available();
+                int wantRead;
+                if (available > bufferSize) {
+                    // We have more bytes than fit into our buffer. Skip forward so
+                    // we don't get left behind.
+                    // [bufferSize / 2]: Try to keep our buffer half-filled.
+                    final long wantSkip = numSkip + (available - bufferSize / 2);
+                    final long actual = audioData.skip(wantSkip);
+                    // If we happened to skip part of a pair of samples, we need
+                    // to skip the remaining bytes of it when writing to audioTrack.
+                    final int malign = (int) ((bufPos + actual) & 3L);
+                    if (malign != 0) {
+                        numSkip = 4 - malign;
+                    } else {
+                        numSkip = 0;
+                    }
+                    wantRead = Math.min(MAX_SOCKET_READ_LEN - bufPos, (int) (available - actual));
+                    Log.d("Worker", "skipped: wantSkip=" + wantSkip + " actual=" + actual + " numSkip=" + numSkip + " wantRead=" + wantRead + " bufPos=" + bufPos);
+                    bufPos = 0;
+                } else {
+                    // Read all if we already have more than chunkSize.
+                    wantRead = Math.min(MAX_SOCKET_READ_LEN - bufPos, Math.max(available, chunkSize));
                 }
-                if (sizeWrite == AudioTrack.ERROR_BAD_VALUE) {
-                    Log.w("Worker", "audioTrack.write(): BAD_VALUE");
-                    sizeWrite = 0;
+
+                bufPos += audioData.read(audioBuffer, bufPos, wantRead);
+
+                int writeStart = numSkip;
+                // [& ~3]: Only try to write full sample-pairs.
+                int wantWrite = (bufPos - numSkip) & ~3;
+
+                int sizeWrite = 0;
+                if (wantWrite > 0) {
+                    sizeWrite = audioTrack.write(audioBuffer, writeStart, wantWrite);
                 }
 
                 if (sizeWrite < 0) {
                     stopWithError(new IOException("audioTrack.write() returned " + sizeWrite));
-                } else if (!started) {
-                    started = true;
-                    handler.post(() -> listener.onPlaybackStarted(this));
+                } else {
+                    if (sizeWrite > 0) {
+                        // Move remaining data to the start of the buffer.
+                        int writeEnd = writeStart + sizeWrite;
+                        System.arraycopy(audioBuffer, writeEnd, audioBuffer, 0, bufPos - writeEnd);
+                        bufPos -= writeEnd;
+                        numSkip = 0;
+                    }
+                    if (!started) {
+                        started = true;
+                        handler.post(() -> listener.onPlaybackStarted(this));
+                    }
                 }
             }
 
