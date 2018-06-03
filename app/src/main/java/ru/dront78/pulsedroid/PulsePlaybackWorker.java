@@ -20,7 +20,7 @@ public class PulsePlaybackWorker implements Runnable {
      * Maximum block that socket's {@code InputStream} seems to read regardless of the
      * length parameter. If we try to read more than this, our alignment fails.
      */
-    private static final int MAX_SOCKET_READ_LEN = 65536 / 2;
+    private static final int MAX_SOCKET_READ_LEN = 65536;
 
     private final String host;
     private final int port;
@@ -96,20 +96,18 @@ public class PulsePlaybackWorker implements Runnable {
                 final int available = audioData.available();
                 int wantRead;
                 if (available > bufferSize) {
-                    // @TODO@ simplify this - we handle it later anyways
                     // We have more bytes than fit into our buffer. Skip forward so
                     // we don't get left behind.
                     // [bufferSize / 2]: Try to keep our buffer half-filled.
-                    // [& ~3L]: Try to skip pairs of samples (make it divisible by 4).
-                    final long wantSkip = numSkip + (available - bufferSize / 2) & ~3L;
-                    final long actual = audioData.skip(wantSkip - 1); // @DEBUG@ - 3
-                    // If audioData decided to skip part of a pair of samples, we need
+                    final long wantSkip = numSkip + (available - bufferSize / 2);
+                    final long actual = audioData.skip(wantSkip | 3); // @DEBUG@: | 3
+                    // If we happened to skip part of a pair of samples, we need
                     // to skip the remaining bytes of it when writing to audioTrack.
-                    wantRead = Math.min(MAX_SOCKET_READ_LEN, (int) (available - actual));
                     final int malign = (int) ((actual - numSkip) & 3L);
                     if (malign != 0) {
-                        numSkip = 4 - malign;
+                        numSkip += 4 - malign;
                     }
+                    wantRead = Math.min(MAX_SOCKET_READ_LEN, (int) (available - actual));
                     bufPos = 0;
                     Log.d("Worker", "skipped: available=" + available + " wantSkip=" + wantSkip + " actual=" + actual + " malign=" + malign + " numSkip=" + numSkip + " wantRead=" + wantRead);
                 } else {
@@ -117,7 +115,6 @@ public class PulsePlaybackWorker implements Runnable {
                     wantRead = Math.min(MAX_SOCKET_READ_LEN, Math.max(available, chunkSize));
                 }
 
-                Log.v("Worker", "read: bufPos=" + bufPos + " wantRead=" + wantRead);
                 while (bufPos < wantRead) {
                     int n = audioData.read(audioBuffer, bufPos, wantRead - bufPos);
                     if (n < 0) {
@@ -130,42 +127,23 @@ public class PulsePlaybackWorker implements Runnable {
                 }
 
                 int writeStart = numSkip;
-//                if (numSkip > 0) {
-//                    System.arraycopy(audioBuffer, numSkip, audioBuffer, 0, bufPos - numSkip);
-//                    writeStart = 0;
-//                }
-                // AudioTrack writes less if we don't round to full sample-pairs,
-                // misaligning the buffer.
-                // @TODO@ rm this: [& ~3]: round to full sample-pairs
+                // [& ~3]: Only try to write full sample-pairs.
                 int wantWrite = (bufPos - numSkip) & ~3;
 
-//                if (numSkip > 0) {
-//                    // Fix our alignment by dropping the remaining bytes of the first samples.
-//                    if (bufPos >= numSkip) {
-//                        Log.d("Worker", "skip write: numSkip=" + numSkip);
-//                        writeStart = numSkip;
-//                        wantWrite = bufPos - numSkip;
-//                        numSkip = 0;
-//                    } else {
-//                        // We read less bytes than we need to skip. We'll end up writing nothing
-//                        // now and skip the remaining bytes next time.
-//                        numSkip -= bufPos;
-//                        wantWrite = 0;
-//                        Log.d("Worker", "skip write: low: sizeRead=" + bufPos + " new numSkip=" + numSkip);
-//                    }
-//                    Log.d("Worker", "write: writeStart=" + writeStart + " wantWrite=" + wantWrite + " sizeRead=" + bufPos);
-//                }
-
-                int sizeWrite = audioTrack.write(audioBuffer, writeStart, wantWrite);
+                int sizeWrite = 0;
+                if (wantWrite > 0) {
+                    sizeWrite = audioTrack.write(audioBuffer, writeStart, wantWrite);
+                }
                 if (sizeWrite < 0) {
                     stopWithError(new IOException("audioTrack.write() returned " + sizeWrite));
                 } else {
-                    Log.v("Worker", "sizeWrite=" + sizeWrite + " writeStart=" + writeStart + " wantWrite=" + wantWrite);
-                    int writeEnd = writeStart + sizeWrite;
-                    // Move remaining data to the start of the buffer.
-                    System.arraycopy(audioBuffer, writeEnd, audioBuffer, 0, bufPos - writeEnd);
-                    bufPos -= sizeWrite + writeStart;
-                    numSkip = 0;
+                    if (sizeWrite > 0) {
+                        // Move remaining data to the start of the buffer.
+                        int writeEnd = writeStart + sizeWrite;
+                        System.arraycopy(audioBuffer, writeEnd, audioBuffer, 0, bufPos - writeEnd);
+                        bufPos -= writeStart + sizeWrite;
+                        numSkip = 0;
+                    }
                     if (!started) {
                         started = true;
                         handler.post(() -> listener.onPlaybackStarted(this));
