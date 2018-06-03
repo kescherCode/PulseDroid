@@ -100,7 +100,7 @@ public class PulsePlaybackWorker implements Runnable {
                     // we don't get left behind.
                     // [bufferSize / 2]: Try to keep our buffer half-filled.
                     final long wantSkip = numSkip + (available - bufferSize / 2);
-                    final long actual = audioData.skip(wantSkip | 3); // @DEBUG@: | 3
+                    final long actual = audioData.skip(wantSkip);
                     // If we happened to skip part of a pair of samples, we need
                     // to skip the remaining bytes of it when writing to audioTrack.
                     final int malign = (int) ((bufPos + actual) & 3L);
