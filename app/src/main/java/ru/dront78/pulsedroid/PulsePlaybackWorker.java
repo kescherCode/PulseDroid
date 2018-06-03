@@ -109,15 +109,15 @@ public class PulsePlaybackWorker implements Runnable {
                     } else {
                         numSkip = 0;
                     }
-                    wantRead = Math.min(MAX_SOCKET_READ_LEN, (int) (available - actual));
+                    wantRead = Math.min(MAX_SOCKET_READ_LEN - bufPos, (int) (available - actual));
                     Log.d("Worker", "skipped: available=" + available + " wantSkip=" + wantSkip + " actual=" + actual + " malign=" + malign + " numSkip=" + numSkip + " wantRead=" + wantRead + " bufPos=" + bufPos);
                     bufPos = 0;
                 } else {
                     // Read all if we already have more than chunkSize.
-                    wantRead = Math.min(MAX_SOCKET_READ_LEN, Math.max(available, chunkSize));
+                    wantRead = Math.min(MAX_SOCKET_READ_LEN - bufPos, Math.max(available, chunkSize));
                 }
 
-                bufPos += audioData.read(audioBuffer, bufPos, wantRead - bufPos);
+                bufPos += audioData.read(audioBuffer, bufPos, wantRead);
 
                 int writeStart = numSkip;
                 // [& ~3]: Only try to write full sample-pairs.
@@ -134,7 +134,6 @@ public class PulsePlaybackWorker implements Runnable {
                     if (sizeWrite > 0) {
                         // Move remaining data to the start of the buffer.
                         int writeEnd = writeStart + sizeWrite;
-                        Log.d("Worker", "shift: writeEnd=" + writeEnd + " bufPos=" + bufPos + " sizeWrite=" + sizeWrite);
                         System.arraycopy(audioBuffer, writeEnd, audioBuffer, 0, bufPos - writeEnd);
                         bufPos -= writeStart + sizeWrite;
                         numSkip = 0;
