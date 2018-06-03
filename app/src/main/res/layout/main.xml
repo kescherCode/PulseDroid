@@ -57,12 +57,6 @@
         android:layout_gravity="bottom"
         android:text="@string/btn_waiting" />
 
-    <Button
-        android:id="@+id/ButtonExit"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/btn_exit" />
-
     <CheckBox
         android:id="@+id/auto_start"
         android:layout_width="wrap_content"
