@@ -103,13 +103,15 @@ public class PulsePlaybackWorker implements Runnable {
                     final long actual = audioData.skip(wantSkip | 3); // @DEBUG@: | 3
                     // If we happened to skip part of a pair of samples, we need
                     // to skip the remaining bytes of it when writing to audioTrack.
-                    final int malign = (int) ((actual - numSkip) & 3L);
+                    final int malign = (int) ((bufPos + actual) & 3L);
                     if (malign != 0) {
-                        numSkip += 4 - malign;
+                        numSkip = 4 - malign;
+                    } else {
+                        numSkip = 0;
                     }
                     wantRead = Math.min(MAX_SOCKET_READ_LEN, (int) (available - actual));
+                    Log.d("Worker", "skipped: available=" + available + " wantSkip=" + wantSkip + " actual=" + actual + " malign=" + malign + " numSkip=" + numSkip + " wantRead=" + wantRead + " bufPos=" + bufPos);
                     bufPos = 0;
-                    Log.d("Worker", "skipped: available=" + available + " wantSkip=" + wantSkip + " actual=" + actual + " malign=" + malign + " numSkip=" + numSkip + " wantRead=" + wantRead);
                 } else {
                     // Read all if we already have more than chunkSize.
                     wantRead = Math.min(MAX_SOCKET_READ_LEN, Math.max(available, chunkSize));
@@ -132,6 +134,7 @@ public class PulsePlaybackWorker implements Runnable {
                     if (sizeWrite > 0) {
                         // Move remaining data to the start of the buffer.
                         int writeEnd = writeStart + sizeWrite;
+                        Log.d("Worker", "shift: writeEnd=" + writeEnd + " bufPos=" + bufPos + " sizeWrite=" + sizeWrite);
                         System.arraycopy(audioBuffer, writeEnd, audioBuffer, 0, bufPos - writeEnd);
                         bufPos -= writeStart + sizeWrite;
                         numSkip = 0;
