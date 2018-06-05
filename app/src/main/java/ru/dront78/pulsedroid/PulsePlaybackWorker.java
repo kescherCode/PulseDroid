@@ -139,8 +139,9 @@ public class PulsePlaybackWorker implements Runnable {
                     if (sizeWrite > 0) {
                         // Move remaining data to the start of the buffer.
                         int writeEnd = writeStart + sizeWrite;
-                        System.arraycopy(audioBuffer, writeEnd, audioBuffer, 0, bufPos - writeEnd);
-                        bufPos -= writeEnd;
+                        int len = bufPos - writeEnd;
+                        System.arraycopy(audioBuffer, writeEnd, audioBuffer, 0, len);
+                        bufPos = len;
                         numSkip = 0;
                     }
                     if (!started) {
