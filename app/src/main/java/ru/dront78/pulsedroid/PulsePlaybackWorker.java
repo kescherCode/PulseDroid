@@ -13,6 +13,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PulsePlaybackWorker implements Runnable {
@@ -31,6 +32,7 @@ public class PulsePlaybackWorker implements Runnable {
 
     private Throwable error;
     private AtomicBoolean stopped = new AtomicBoolean(false);
+    private Socket sock;
 
     PulsePlaybackWorker(String host, String port, WakeLock wakeLock, Handler handler, Listener listener) {
         this.host = host;
@@ -40,8 +42,20 @@ public class PulsePlaybackWorker implements Runnable {
         this.listener = listener;
     }
 
+    @MainThread
     public void stop() {
         stopped.set(true);
+        Socket s = sock;
+        if (s != null) {
+            // Close our socket to force-stop a long read().
+            try {
+                // NOTE: Hopefully, this is not an "I/O-Operation" because
+                // we run this on the main thread. It seems to work fine on android 7.1.2.
+                s.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void stopWithError(Throwable e) {
@@ -56,7 +70,7 @@ public class PulsePlaybackWorker implements Runnable {
     }
 
     public void run() {
-        Socket sock = null;
+        sock = null;
         InputStream audioData = null;
         AudioTrack audioTrack = null;
         try {
@@ -153,7 +167,12 @@ public class PulsePlaybackWorker implements Runnable {
 
             handler.post(() -> listener.onPlaybackStopped(this));
         } catch (Exception e) {
-            stopWithError(e);
+            // Suppress exception caused by stop() closing our socket.
+            if (!stopped.get() || !(e instanceof SocketException)) {
+                stopWithError(e);
+            } else {
+                handler.post(() -> listener.onPlaybackStopped(this));
+            }
         } finally {
             if (audioData != null) {
                 try {
@@ -168,6 +187,7 @@ public class PulsePlaybackWorker implements Runnable {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                sock = null;
             }
             if (audioTrack != null) {
                 // AudioTrack throws if we call stop() in stopped state. This happens if

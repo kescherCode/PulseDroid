@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
@@ -35,6 +36,8 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
     public String port = "";
     @Nullable
     private PulsePlaybackWorker playWorker = null;
+    @Nullable
+    private Thread playWorkerThread;
 
     private final MutableLiveData<PlayState> playState = new MutableLiveData<>();
 
@@ -110,6 +113,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
                 .setSmallIcon(R.drawable.ic_pulse);
     }
 
+    @MainThread
     public void play() {
         if (!isStartable()) {
             throw new IllegalStateException("Cannot start with playState == " + getPlayState());
@@ -117,10 +121,13 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
         if (playWorker != null) {
             stopWorker();
         }
-        playState.setValue(PlayState.STARTING);
         Toast.makeText(this, R.string.playback_service_playing, Toast.LENGTH_SHORT).show();
         playWorker = new PulsePlaybackWorker(server, port, wakeLock, handler, this);
-        new Thread(playWorker).start();
+        playWorkerThread = new Thread(playWorker);
+
+        playState.setValue(PlayState.STARTING);
+
+        playWorkerThread.start();
 
         startForeground(NOTIFICATION, buildNotification()
                 .setContentText(getText(R.string.playback_service_started))
@@ -129,6 +136,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
         startService(new Intent(this, PulsePlaybackService.class));
     }
 
+    @MainThread
     public void stop() {
         if (getPlayState().isActive()) {
             playState.setValue(PlayState.STOPPING);
@@ -137,9 +145,13 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
         stopWorker();
     }
 
+    @MainThread
     private void stopWorker() {
         if (playWorker != null) {
             playWorker.stop();
+        }
+        if (playWorkerThread != null) {
+            playWorkerThread.interrupt();
         }
     }
 
