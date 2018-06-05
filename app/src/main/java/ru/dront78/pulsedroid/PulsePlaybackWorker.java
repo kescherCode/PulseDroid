@@ -19,7 +19,7 @@ public class PulsePlaybackWorker implements Runnable {
 
     /**
      * Maximum block that socket's {@code InputStream} seems to read regardless of the
-     * length parameter. If we try to read more than this, our alignment fails.
+     * length parameter.
      */
     private static final int MAX_SOCKET_READ_LEN = 65536;
 
