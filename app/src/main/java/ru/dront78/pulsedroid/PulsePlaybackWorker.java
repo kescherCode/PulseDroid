@@ -9,6 +9,7 @@ import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
@@ -117,7 +118,11 @@ public class PulsePlaybackWorker implements Runnable {
                     wantRead = Math.min(MAX_SOCKET_READ_LEN - bufPos, Math.max(available, chunkSize));
                 }
 
-                bufPos += audioData.read(audioBuffer, bufPos, wantRead);
+                int nRead = audioData.read(audioBuffer, bufPos, wantRead);
+                if (nRead < 0) {
+                    throw new EOFException("Connection closed");
+                }
+                bufPos += nRead;
 
                 int writeStart = numSkip;
                 // [& ~3]: Only try to write full sample-pairs.
