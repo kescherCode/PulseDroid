@@ -117,7 +117,7 @@ public class PulseDroidActivity extends AppCompatActivity {
                 break;
             case STARTING:
                 playButton.setText(R.string.btn_starting);
-                playButton.setEnabled(false);
+                playButton.setEnabled(true);
                 break;
             case STARTED:
                 playButton.setText(R.string.btn_stop);

@@ -88,6 +88,9 @@ public class PulsePlaybackWorker implements Runnable {
             // Try to receive 4 times per second.
             final int chunkSize = byteRate / 4;
 
+            // Socket constructor can hang for a long time. There is no way to cancel it,
+            // since we have no reference to it at this point.
+            // TODO find a way to cancel
             sock = new Socket(host, port);
             sock.setReceiveBufferSize(bufferSize);
             audioData = sock.getInputStream();
