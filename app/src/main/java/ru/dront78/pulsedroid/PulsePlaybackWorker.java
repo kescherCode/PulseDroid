@@ -97,6 +97,11 @@ public class PulsePlaybackWorker implements Runnable {
                     sampleRate, AudioFormat.CHANNEL_CONFIGURATION_STEREO,
                     AudioFormat.ENCODING_PCM_16BIT, minBufferSize,
                     AudioTrack.MODE_STREAM);
+            if (audioTrack.getState() != AudioTrack.STATE_INITIALIZED) {
+                throw new IllegalStateException(
+                        "Could not initialize AudioTrack."
+                        + " state == " + audioTrack.getState());
+            }
             audioTrack.play();
 
             boolean started = false;
