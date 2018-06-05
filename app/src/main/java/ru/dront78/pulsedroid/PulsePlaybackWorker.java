@@ -200,6 +200,7 @@ public class PulsePlaybackWorker implements Runnable {
                 if (audioTrack.getPlayState() != AudioTrack.PLAYSTATE_STOPPED) {
                     audioTrack.stop();
                 }
+                audioTrack.release();
             }
         }
     }
