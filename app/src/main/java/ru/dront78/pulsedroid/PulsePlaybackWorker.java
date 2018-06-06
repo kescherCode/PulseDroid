@@ -12,9 +12,13 @@ import android.util.Log;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import ru.dront78.pulsedroid.exception.StoppedException;
 
 public class PulsePlaybackWorker implements Runnable {
 
@@ -70,7 +74,6 @@ public class PulsePlaybackWorker implements Runnable {
     }
 
     public void run() {
-        sock = null;
         InputStream audioData = null;
         AudioTrack audioTrack = null;
         try {
@@ -88,10 +91,7 @@ public class PulsePlaybackWorker implements Runnable {
             // Try to receive 4 times per second.
             final int chunkSize = byteRate / 4;
 
-            // Socket constructor can hang for a long time. There is no way to cancel it,
-            // since we have no reference to it at this point.
-            // TODO find a way to cancel
-            sock = new Socket(host, port);
+            connect();
             sock.setReceiveBufferSize(bufferSize);
             audioData = sock.getInputStream();
 
@@ -174,6 +174,8 @@ public class PulsePlaybackWorker implements Runnable {
             }
 
             handler.post(() -> listener.onPlaybackStopped(this));
+        } catch (StoppedException e) {
+            handler.post(() -> listener.onPlaybackStopped(this));
         } catch (Exception e) {
             // Suppress exception caused by stop() closing our socket.
             if (!stopped.get() || !(e instanceof SocketException)) {
@@ -205,6 +207,43 @@ public class PulsePlaybackWorker implements Runnable {
                 }
                 audioTrack.release();
             }
+        }
+    }
+
+    /**
+     * Creates {@code sock}, and connects it to our {@code host} and {@code port}.
+     * <p>
+     * This behaves like the {@link Socket Socket(String, int)} constructor, but
+     * allows referencing the socket and can be interrupted with {@link #stop()}.
+     *
+     * @throws IOException If connection to the host fails.
+     * @throws StoppedException If {@link #stopped} was set.
+     */
+    private void connect() throws IOException {
+        InetAddress[] addresses = InetAddress.getAllByName(host);
+        for (int i = 0; i < addresses.length; i++) {
+            InetAddress address = addresses[i];
+            if (stopped.get()) {
+                throw new StoppedException();
+            }
+            try {
+                sock = new Socket();
+                sock.connect(new InetSocketAddress(address, port));
+                break;
+            } catch (IOException connException) {
+                try {
+                    sock.close();
+                } catch (IOException e) {
+                    connException.addSuppressed(e);
+                }
+
+                // Only throw on last address.
+                if (i == addresses.length - 1) {
+                    throw connException;
+                }
+            }
+
+            sock = null;
         }
     }
 
