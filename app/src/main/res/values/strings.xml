@@ -2,10 +2,11 @@
 <resources>
     <string name="app_name">PulseDroid</string>
     <string name="auto_start">Auto Start</string>
-    <string name="playback_service_started">PulseDroid Playback Started</string>
-    <string name="playback_service_playing">PulseDroid Playback Playing</string>
-    <string name="playback_service_paused">PulseDroid Playback Paused</string>
-    <string name="playback_service_stopped">PulseDroid Playback Stopped</string>
+    <string name="playback_service_status">PulseDroid Playback %1$s</string>
+    <string name="playback_status_starting">Starting</string>
+    <string name="playback_status_playing">Playing</string>
+    <string name="playback_status_stopping">Stopping</string>
+    <string name="playback_status_stopped">Stopped</string>
     <string name="playback_service_label">PulseDroid Playback</string>
     <string name="service_notification_channel">pulsedroid_service</string>
     <string name="btn_play">Play</string>

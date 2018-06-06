@@ -1,5 +1,6 @@
 package ru.dront78.pulsedroid;
 
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -15,14 +16,14 @@ import android.os.PowerManager;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationCompat;
-import android.widget.Toast;
 
 public class PulsePlaybackService extends Service implements PulsePlaybackWorker.Listener {
     /**
-     * Unique Identification Number for the Notification.
+     * Unique ID for the Notification.
      */
-    private static final int NOTIFICATION = R.string.playback_service_started;
+    private static final int NOTIFICATION = R.string.playback_service_status;
 
     private final IBinder binder = new LocalBinder();
 
@@ -71,15 +72,13 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
             notifManager.cancel(NOTIFICATION);
         }
 
-        // Tell the user we stopped.
-        Toast.makeText(this, R.string.playback_service_stopped, Toast.LENGTH_SHORT).show();
         stop();
     }
 
     @Override
     public void onPlaybackError(@NonNull PulsePlaybackWorker worker, @NonNull Throwable t) {
         if (worker == playWorker) {
-            playState.setValue(PlayState.STOPPED);
+            notifyState(PlayState.STOPPED);
             stopForeground(true);
             stopSelf();
         }
@@ -88,27 +87,29 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
     @Override
     public void onPlaybackStarted(@NonNull PulsePlaybackWorker worker) {
         if (worker == playWorker) {
-            playState.setValue(PlayState.STARTED);
+            notifyState(PlayState.STARTED);
         }
     }
 
     @Override
     public void onPlaybackStopped(@NonNull PulsePlaybackWorker worker) {
         if (worker == playWorker) {
-            playState.setValue(PlayState.STOPPED);
+            notifyState(PlayState.STOPPED);
             stopForeground(true);
             stopSelf();
         }
     }
 
-    private NotificationCompat.Builder buildNotification() {
+    private NotificationCompat.Builder buildNotification(@StringRes int statusResId) {
         // The PendingIntent to launch our activity if the user selects this notification
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
                 new Intent(this, PulseDroidActivity.class), 0);
 
-        // Set the icon, scrolling text and timestamp
+        String text = getString(R.string.playback_service_status, getString(statusResId));
+
         return new NotificationCompat.Builder(this, getString(R.string.service_notification_channel))
                 .setContentTitle(getText(R.string.playback_service_label))
+                .setContentText(text)
                 .setContentIntent(contentIntent)
                 .setSmallIcon(R.drawable.ic_pulse);
     }
@@ -121,17 +122,16 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
         if (playWorker != null) {
             stopWorker();
         }
-        Toast.makeText(this, R.string.playback_service_playing, Toast.LENGTH_SHORT).show();
         playWorker = new PulsePlaybackWorker(server, port, wakeLock, handler, this);
         playWorkerThread = new Thread(playWorker);
 
-        playState.setValue(PlayState.STARTING);
+        Notification notif = buildNotification(R.string.playback_status_starting).build();
+        startForeground(NOTIFICATION, notif);
+
+        notifyState(PlayState.STARTING);
 
         playWorkerThread.start();
 
-        startForeground(NOTIFICATION, buildNotification()
-                .setContentText(getText(R.string.playback_service_started))
-                .build());
         // allow running in the background when service gets unbound
         startService(new Intent(this, PulsePlaybackService.class));
     }
@@ -139,8 +139,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
     @MainThread
     public void stop() {
         if (getPlayState().isActive()) {
-            playState.setValue(PlayState.STOPPING);
-            Toast.makeText(this, R.string.playback_service_paused, Toast.LENGTH_SHORT).show();
+            notifyState(PlayState.STOPPING);
         }
         stopWorker();
     }
@@ -153,6 +152,29 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
         if (playWorkerThread != null) {
             playWorkerThread.interrupt();
         }
+    }
+
+    private void notifyState(@NonNull PlayState state) {
+        playState.setValue(state);
+        int statusResId;
+        switch (state) {
+            case STOPPED:
+                statusResId = R.string.playback_status_stopped;
+                break;
+            case STARTING:
+                statusResId = R.string.playback_status_starting;
+                break;
+            case STARTED:
+                statusResId = R.string.playback_status_playing;
+                break;
+            case STOPPING:
+                statusResId = R.string.playback_status_stopping;
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
+        Notification notif = buildNotification(statusResId).build();
+        notifManager.notify(NOTIFICATION, notif);
     }
 
     public boolean isStartable() {
