@@ -24,7 +24,7 @@ android {
     signingConfigs {
         release {
             storeFile file(System.env.HOME + "/.android/android.keystore")
-            keyAlias "android"
+            keyAlias "key"
             storePassword "android"
             keyPassword "android"
         }
