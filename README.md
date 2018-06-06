@@ -41,11 +41,11 @@ very bare-bones state.
 shortely picked up the project about 5 years later, improving the android
 experience, for example by using a foreground service.
 
-In 2018 I, ferreum, I was looking for just such an app and found this project
-and reworked everything, wanting a more polished experience. The app can now
-play audio in the background after closing the main screen, has improved
-buffering, error handling, state handling, and a modernized structure. More
-improvements to follow as I see fit.
+In 2018 I, ferreum, was looking for just such an app, found this project and
+reworked everything, wanting a more polished experience. The app can now play
+audio in the background after closing the main screen, has improved buffering,
+error handling, state handling, and a modernized structure. More improvements
+to follow as I see fit.
 
 And now a message from the original creator at the beginning of this project:
 
