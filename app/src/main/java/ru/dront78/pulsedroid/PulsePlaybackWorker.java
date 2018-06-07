@@ -16,6 +16,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 
 import ru.dront78.pulsedroid.exception.StoppedException;
 
@@ -46,16 +47,18 @@ public class PulsePlaybackWorker implements Runnable {
 
     @MainThread
     public void stop() {
-        stopped = true;
-        Socket s = sock;
-        if (s != null) {
-            // Close our socket to force-stop a long read().
-            try {
-                // NOTE: Hopefully, this is not an "I/O-Operation" because
-                // we run this on the main thread. It seems to work fine on android 7.1.2.
-                s.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+        synchronized (this) {
+            stopped = true;
+            Socket s = sock;
+            if (s != null) {
+                // Close our socket to force-stop a long read().
+                try {
+                    // NOTE: Hopefully, this is not an "I/O-Operation" because
+                    // we run this on the main thread. It seems to work fine on android 7.1.2.
+                    s.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -217,16 +220,27 @@ public class PulsePlaybackWorker implements Runnable {
      * @throws StoppedException If {@link #stopped} was set.
      */
     private void connect() throws IOException {
+
+        // We may hang here to resolve a host name. No way to interrupt this so far.
         InetAddress[] addresses = InetAddress.getAllByName(host);
+        if (addresses.length == 0) {
+            throw new UnknownHostException("No addresses returned by InetAddress.getAllByName()");
+        }
+
         for (int i = 0; i < addresses.length; i++) {
             InetAddress address = addresses[i];
-            if (stopped) {
-                throw new StoppedException();
-            }
             try {
-                sock = new Socket();
+                synchronized (this) {
+                    sock = null;
+                    if (stopped) {
+                        throw new StoppedException();
+                    }
+                    sock = new Socket();
+                }
                 sock.connect(new InetSocketAddress(address, port));
-                break;
+
+                // We are now connected.
+                return;
             } catch (IOException connException) {
                 try {
                     sock.close();
@@ -239,9 +253,9 @@ public class PulsePlaybackWorker implements Runnable {
                     throw connException;
                 }
             }
-
-            sock = null;
         }
+
+        throw new AssertionError("should never happen");
     }
 
     public interface Listener {
