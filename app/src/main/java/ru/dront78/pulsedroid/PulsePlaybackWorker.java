@@ -22,8 +22,7 @@ import ru.dront78.pulsedroid.exception.StoppedException;
 public class PulsePlaybackWorker implements Runnable {
 
     /**
-     * Maximum block that socket's {@code InputStream} seems to read regardless of the
-     * length parameter.
+     * Maximum block that socket's {@code InputStream} seems to read even if we request more.
      */
     private static final int MAX_SOCKET_READ_LEN = 65536;
 
