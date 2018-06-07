@@ -67,8 +67,8 @@
         android:id="@+id/auto_start"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingLeft="14dp"
-        android:paddingRight="14dp"
+        android:layout_marginLeft="14dp"
+        android:layout_marginRight="14dp"
         android:text="@string/auto_start" />
 
     <TextView
