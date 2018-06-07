@@ -132,13 +132,12 @@ public class PulsePlaybackWorker implements Runnable {
                     } else {
                         numSkip = 0;
                     }
-                    wantRead = Math.min(MAX_SOCKET_READ_LEN - bufPos, (int) (available - actual));
-                    Log.d("Worker", "skipped: wantSkip=" + wantSkip + " actual=" + actual + " numSkip=" + numSkip + " wantRead=" + wantRead + " bufPos=" + bufPos);
+                    Log.d("Worker", "skipped: wantSkip=" + wantSkip + " actual=" + actual + " numSkip=" + numSkip + " bufPos=" + bufPos);
                     bufPos = 0;
-                } else {
-                    // Read all if we already have more than chunkSize.
-                    wantRead = Math.min(MAX_SOCKET_READ_LEN - bufPos, Math.max(available, chunkSize));
                 }
+                // Never aim to write more than chunkSize to audioTrack, so we don't get
+                // blocked any longer than needed.
+                wantRead = chunkSize - bufPos;
 
                 int nRead = audioData.read(audioBuffer, bufPos, wantRead);
                 if (nRead < 0) {
