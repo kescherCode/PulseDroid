@@ -141,19 +141,19 @@ public class PulseDroidActivity extends AppCompatActivity {
 
     public void play() {
         final SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        final EditText server = findViewById(R.id.EditTextServer);
-        final EditText port = findViewById(R.id.EditTextPort);
+        final EditText serverText = findViewById(R.id.EditTextServer);
+        final EditText portText = findViewById(R.id.EditTextPort);
 
+        String server = serverText.getText().toString();
+        int port = Integer.parseInt(portText.getText().toString());
         sharedPref.edit()
-                .putString("server", server.getText().toString())
-                .putString("port", port.getText().toString())
+                .putString("server", server)
+                .putString("port", Integer.toString(port))
                 .putBoolean("auto_start", autoStartCheckBox.isChecked())
                 .apply();
 
         if (boundService != null) {
-            boundService.port = port.getText().toString();
-            boundService.server = server.getText().toString();
-            boundService.play();
+            boundService.play(server, port);
         }
     }
 

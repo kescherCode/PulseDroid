@@ -31,10 +31,6 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
     private NotificationManager notifManager;
     private PowerManager.WakeLock wakeLock;
 
-    @NonNull
-    public String server = "";
-    @NonNull
-    public String port = "";
     @Nullable
     private PulsePlaybackWorker playWorker = null;
     @Nullable
@@ -115,7 +111,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
     }
 
     @MainThread
-    public void play() {
+    public void play(@NonNull String server, int port) {
         if (!isStartable()) {
             throw new IllegalStateException("Cannot start with playState == " + getPlayState());
         }

@@ -32,9 +32,9 @@ public class PulsePlaybackWorker implements Runnable {
     private volatile boolean stopped = false;
     private Socket sock;
 
-    PulsePlaybackWorker(String host, String port, WakeLock wakeLock, Handler handler, Listener listener) {
+    PulsePlaybackWorker(String host, int port, WakeLock wakeLock, Handler handler, Listener listener) {
         this.host = host;
-        this.port = Integer.valueOf(port);
+        this.port = port;
         this.wakeLock = wakeLock;
         this.handler = handler;
         this.listener = listener;
