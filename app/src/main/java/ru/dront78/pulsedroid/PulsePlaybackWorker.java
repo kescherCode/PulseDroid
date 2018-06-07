@@ -31,6 +31,7 @@ public class PulsePlaybackWorker implements Runnable {
     private Throwable error;
     private volatile boolean stopped = false;
     private Socket sock;
+    private volatile int bufferSizeMillis = 2000;
 
     PulsePlaybackWorker(String host, int port, WakeLock wakeLock, Handler handler, Listener listener) {
         this.host = host;
@@ -81,9 +82,6 @@ public class PulsePlaybackWorker implements Runnable {
                     AudioFormat.CHANNEL_CONFIGURATION_STEREO,
                     AudioFormat.ENCODING_PCM_16BIT);
 
-            // Use a 2-second buffer. Larger if system needs it.
-            final int bufferSize = Math.max(minBufferSize, byteRate * 2);
-
             // Try to receive 4 times per second.
             final int chunkSize = byteRate / 4;
 
@@ -111,28 +109,35 @@ public class PulsePlaybackWorker implements Runnable {
             while (!stopped) {
                 wakeLock.acquire(1000);
 
-                final int available = audioData.available();
-                int wantRead;
-                if (available > bufferSize) {
-                    // We have more bytes than fit into our buffer. Skip forward so
-                    // we don't get left behind.
-                    // [bufferSize / 2]: Try to keep our buffer half-filled.
-                    final long wantSkip = numSkip + (available - bufferSize / 2);
-                    final long actual = audioData.skip(wantSkip);
-                    // If we happened to skip part of a pair of samples, we need
-                    // to skip the remaining bytes of it when writing to audioTrack.
-                    final int malign = (int) ((bufPos + actual) & 3L);
-                    if (malign != 0) {
-                        numSkip = 4 - malign;
-                    } else {
-                        numSkip = 0;
+                // Respect bufferSizeMillis setting. Larger if system needs it.
+                final long bufferSizeMillis = this.bufferSizeMillis;
+
+                if (bufferSizeMillis > 0) {
+                    final int bufferSize = Math.max(minBufferSize, (int) (byteRate * bufferSizeMillis / 1000));
+
+                    final int available = audioData.available();
+                    if (available > bufferSize) {
+                        // We have more bytes than fit into our buffer. Skip forward so
+                        // we don't get left behind.
+                        // [bufferSize / 2]: Try to keep our buffer half-filled.
+                        final long wantSkip = numSkip + (available - bufferSize / 2);
+                        final long actual = audioData.skip(wantSkip);
+                        // If we happened to skip part of a pair of samples, we need
+                        // to skip the remaining bytes of it when writing to audioTrack.
+                        final int malign = (int) ((bufPos + actual) & 3L);
+                        if (malign != 0) {
+                            numSkip = 4 - malign;
+                        } else {
+                            numSkip = 0;
+                        }
+                        Log.d("Worker", "skipped: wantSkip=" + wantSkip + " actual=" + actual + " numSkip=" + numSkip + " bufPos=" + bufPos);
+                        bufPos = 0;
                     }
-                    Log.d("Worker", "skipped: wantSkip=" + wantSkip + " actual=" + actual + " numSkip=" + numSkip + " bufPos=" + bufPos);
-                    bufPos = 0;
                 }
+
                 // Never aim to write more than chunkSize to audioTrack, so we don't get
                 // blocked any longer than needed.
-                wantRead = chunkSize - bufPos;
+                int wantRead = chunkSize - bufPos;
 
                 int nRead = audioData.read(audioBuffer, bufPos, wantRead);
                 if (nRead < 0) {
@@ -250,6 +255,10 @@ public class PulsePlaybackWorker implements Runnable {
         }
 
         throw new AssertionError("should never happen");
+    }
+
+    public void setMaxBufferMillis(int millis) {
+        this.bufferSizeMillis = millis;
     }
 
     public interface Listener {

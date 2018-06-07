@@ -71,6 +71,26 @@
         android:layout_marginRight="14dp"
         android:text="@string/auto_start" />
 
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="14dp"
+        android:paddingRight="14dp">
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.7"
+            android:text="@string/input_buffer_size" />
+
+        <Spinner
+            android:id="@+id/bufferSizeSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.3" />
+
+    </LinearLayout>
+
     <TextView
         android:id="@+id/errorText"
         android:layout_width="match_parent"

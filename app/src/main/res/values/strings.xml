@@ -18,4 +18,6 @@
     <string name="input_port">Port</string>
     <string name="input_host">Host</string>
     <string name="play_error">Playback error: %1$s</string>
+    <string name="buffer_infinite">infinite</string>
+    <string name="input_buffer_size">Max buffer</string>
 </resources>
