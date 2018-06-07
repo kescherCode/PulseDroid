@@ -16,7 +16,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import ru.dront78.pulsedroid.exception.StoppedException;
 
@@ -35,7 +34,7 @@ public class PulsePlaybackWorker implements Runnable {
     private final Listener listener;
 
     private Throwable error;
-    private AtomicBoolean stopped = new AtomicBoolean(false);
+    private volatile boolean stopped = false;
     private Socket sock;
 
     PulsePlaybackWorker(String host, String port, WakeLock wakeLock, Handler handler, Listener listener) {
@@ -48,7 +47,7 @@ public class PulsePlaybackWorker implements Runnable {
 
     @MainThread
     public void stop() {
-        stopped.set(true);
+        stopped = true;
         Socket s = sock;
         if (s != null) {
             // Close our socket to force-stop a long read().
@@ -65,7 +64,7 @@ public class PulsePlaybackWorker implements Runnable {
     private void stopWithError(Throwable e) {
         Log.e(PulsePlaybackWorker.class.getSimpleName(), "stopWithError", e);
         error = e;
-        stopped.set(true);
+        stopped = true;
         handler.post(() -> listener.onPlaybackError(this, e));
     }
 
@@ -113,7 +112,7 @@ public class PulsePlaybackWorker implements Runnable {
             int numSkip = 0;
             byte[] audioBuffer = new byte[MAX_SOCKET_READ_LEN];
 
-            while (!stopped.get()) {
+            while (!stopped) {
                 wakeLock.acquire(1000);
 
                 final int available = audioData.available();
@@ -177,7 +176,7 @@ public class PulsePlaybackWorker implements Runnable {
             handler.post(() -> listener.onPlaybackStopped(this));
         } catch (Exception e) {
             // Suppress exception caused by stop() closing our socket.
-            if (!stopped.get() || !(e instanceof SocketException)) {
+            if (!stopped || !(e instanceof SocketException)) {
                 stopWithError(e);
             } else {
                 handler.post(() -> listener.onPlaybackStopped(this));
@@ -222,7 +221,7 @@ public class PulsePlaybackWorker implements Runnable {
         InetAddress[] addresses = InetAddress.getAllByName(host);
         for (int i = 0; i < addresses.length; i++) {
             InetAddress address = addresses[i];
-            if (stopped.get()) {
+            if (stopped) {
                 throw new StoppedException();
             }
             try {
