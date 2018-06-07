@@ -22,11 +22,6 @@ import ru.dront78.pulsedroid.exception.StoppedException;
 
 public class PulsePlaybackWorker implements Runnable {
 
-    /**
-     * Maximum block that socket's {@code InputStream} seems to read even if we request more.
-     */
-    private static final int MAX_SOCKET_READ_LEN = 65536;
-
     private final String host;
     private final int port;
     private final WakeLock wakeLock;
@@ -93,7 +88,6 @@ public class PulsePlaybackWorker implements Runnable {
             final int chunkSize = byteRate / 4;
 
             connect();
-            sock.setReceiveBufferSize(bufferSize);
             audioData = sock.getInputStream();
 
             // Always using minimum buffer size for minimum lag.
@@ -112,7 +106,7 @@ public class PulsePlaybackWorker implements Runnable {
 
             int bufPos = 0;
             int numSkip = 0;
-            byte[] audioBuffer = new byte[MAX_SOCKET_READ_LEN];
+            byte[] audioBuffer = new byte[chunkSize];
 
             while (!stopped) {
                 wakeLock.acquire(1000);
