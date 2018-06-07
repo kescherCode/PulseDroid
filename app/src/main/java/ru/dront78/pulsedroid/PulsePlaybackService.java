@@ -1,6 +1,7 @@
 package ru.dront78.pulsedroid;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -52,6 +53,13 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         assert pm != null;
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "pulse");
+
+        if (Build.VERSION.SDK_INT >= 26) {
+            notifManager.createNotificationChannel(new NotificationChannel(
+                    getString(R.string.service_notification_channel),
+                    getString(R.string.playback_service_label),
+                    NotificationManager.IMPORTANCE_LOW));
+        }
     }
 
     @Override
