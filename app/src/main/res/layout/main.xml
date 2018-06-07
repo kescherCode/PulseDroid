@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/LinearLayoutServer"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:paddingLeft="14dp"
@@ -15,14 +15,14 @@
 
         <TextView
             android:id="@+id/TextViewServer"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0.7"
             android:text="@string/input_host" />
 
         <EditText
             android:id="@+id/EditTextServer"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0.3"
             android:hint="@string/input_host"
@@ -32,21 +32,21 @@
 
     <LinearLayout
         android:id="@+id/LinearLayoutPort"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingLeft="14dp"
         android:paddingRight="14dp">
 
         <TextView
             android:id="@+id/TextViewPort"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0.7"
             android:text="@string/input_port" />
 
         <EditText
             android:id="@+id/EditTextPort"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0.3"
             android:hint="@string/input_port"
@@ -57,7 +57,7 @@
 
     <Button
         android:id="@+id/ButtonPlay"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:layout_margin="14dp"
@@ -72,13 +72,13 @@
         android:text="@string/auto_start" />
 
     <LinearLayout
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingLeft="14dp"
         android:paddingRight="14dp">
 
         <TextView
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0.7"
             android:text="@string/input_buffer_size" />
