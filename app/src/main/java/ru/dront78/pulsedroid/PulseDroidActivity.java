@@ -7,6 +7,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -161,9 +162,7 @@ public class PulseDroidActivity extends AppCompatActivity {
         }
         Throwable error = boundService == null ? null : boundService.getError();
         if (error != null) {
-            String msg = error.getLocalizedMessage();
-            String text = error.getClass().getName()
-                    + (msg == null ? " (No error message)" : ": " + msg);
+            String text = formatMessage(error);
             errorText.setText(getString(R.string.play_error, text));
         } else {
             errorText.setText("");
@@ -176,7 +175,14 @@ public class PulseDroidActivity extends AppCompatActivity {
         final EditText portText = findViewById(R.id.EditTextPort);
 
         String server = serverText.getText().toString();
-        int port = Integer.parseInt(portText.getText().toString());
+        int port;
+        try {
+            port = Integer.parseInt(portText.getText().toString());
+        } catch (NumberFormatException e) {
+            portText.setError(formatMessage(e));
+            return;
+        }
+        portText.setError(null);
         sharedPref.edit()
                 .putString("server", server)
                 .putString("port", Integer.toString(port))
@@ -194,6 +200,13 @@ public class PulseDroidActivity extends AppCompatActivity {
         if (boundService != null) {
             boundService.stop();
         }
+    }
+
+    @NonNull
+    private String formatMessage(Throwable error) {
+        String msg = error.getLocalizedMessage();
+        return error.getClass().getName()
+                + (msg == null ? " (No error message)" : ": " + msg);
     }
 
 }
