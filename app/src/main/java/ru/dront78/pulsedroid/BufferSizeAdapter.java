@@ -60,9 +60,8 @@ class BufferSizeAdapter extends BaseAdapter {
             return context.getString(R.string.buffer_infinite);
         }
         DecimalFormat format = new DecimalFormat("");
-        double log = Math.log10(item);
         format.setMinimumIntegerDigits(1);
-        format.setMaximumFractionDigits(8 - (int) log);
+        format.setMaximumFractionDigits(3);
         return format.format(item / 1000d) + "s";
     }
 
