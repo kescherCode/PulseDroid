@@ -26,11 +26,14 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
      */
     private static final int NOTIFICATION = R.string.playback_service_status;
 
+    private static final String ACTION_STOP = PulsePlaybackService.class.getName() + ".STOP";
+
     private final IBinder binder = new LocalBinder();
 
     private Handler handler = new Handler();
     private NotificationManager notifManager;
     private PowerManager.WakeLock wakeLock;
+    private PendingIntent stopPendingIntent;
 
     @Nullable
     private PulsePlaybackWorker playWorker = null;
@@ -51,6 +54,11 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
         notifManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         playState.setValue(PlayState.STOPPED);
 
+        Intent intent = new Intent(this, PulsePlaybackService.class)
+                .setAction(ACTION_STOP);
+        stopPendingIntent = PendingIntent.getService(
+                this, R.id.intent_stop_service, intent, 0);
+
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         assert pm != null;
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "pulse");
@@ -65,6 +73,11 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null) {
+            if (ACTION_STOP.equals(intent.getAction())) {
+                stop();
+            }
+        }
         return START_NOT_STICKY;
     }
 
@@ -116,7 +129,8 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
                 .setContentTitle(getText(R.string.playback_service_label))
                 .setContentText(text)
                 .setContentIntent(contentIntent)
-                .setSmallIcon(R.drawable.ic_pulse);
+                .setSmallIcon(R.drawable.ic_pulse)
+                .addAction(0, getText(R.string.btn_stop), stopPendingIntent);
     }
 
     @MainThread
