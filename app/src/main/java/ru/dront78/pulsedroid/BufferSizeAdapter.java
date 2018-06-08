@@ -13,7 +13,7 @@ import java.util.List;
 
 class BufferSizeAdapter extends BaseAdapter {
 
-    public static final int DEFAULT_INDEX = 5;
+    public static final int DEFAULT_INDEX = 3;
 
     private Context context;
     private List<Integer> presets = Arrays.asList(0, 125, 250, 500, 1000, 2000, 5000, 10000, -1);
