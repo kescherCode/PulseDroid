@@ -13,10 +13,10 @@ import java.util.List;
 
 class BufferSizeAdapter extends BaseAdapter {
 
-    public static final int DEFAULT_INDEX = 4;
+    public static final int DEFAULT_INDEX = 5;
 
     private Context context;
-    private List<Integer> presets = Arrays.asList(125, 250, 500, 1000, 2000, 5000, 10000, -1);
+    private List<Integer> presets = Arrays.asList(0, 125, 250, 500, 1000, 2000, 5000, 10000, -1);
 
     BufferSizeAdapter(Context context) {
         this.context = context;
@@ -58,6 +58,9 @@ class BufferSizeAdapter extends BaseAdapter {
     private String formatBufferLength(int item) {
         if (item < 0) {
             return context.getString(R.string.buffer_infinite);
+        }
+        if (item == 0) {
+            return context.getString(R.string.buffer_minimal);
         }
         DecimalFormat format = new DecimalFormat("");
         format.setMinimumIntegerDigits(1);

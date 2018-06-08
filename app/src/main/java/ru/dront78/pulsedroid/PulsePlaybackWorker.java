@@ -112,7 +112,7 @@ public class PulsePlaybackWorker implements Runnable {
                 // Respect bufferSizeMillis setting. Larger if system needs it.
                 final long bufferSizeMillis = this.bufferSizeMillis;
 
-                if (bufferSizeMillis > 0) {
+                if (bufferSizeMillis >= 0) {
                     final int bufferSize = Math.max(minBufferSize, (int) (byteRate * bufferSizeMillis / 1000));
 
                     final int available = audioData.available();
