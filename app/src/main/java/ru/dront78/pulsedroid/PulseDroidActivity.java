@@ -163,7 +163,7 @@ public class PulseDroidActivity extends AppCompatActivity {
         if (error != null) {
             String msg = error.getLocalizedMessage();
             String text = error.getClass().getName()
-                    + (msg == null ? " (No error message)" : " " + msg);
+                    + (msg == null ? " (No error message)" : ": " + msg);
             errorText.setText(getString(R.string.play_error, text));
         } else {
             errorText.setText("");
