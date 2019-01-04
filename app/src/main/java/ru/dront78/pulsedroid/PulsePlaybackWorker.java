@@ -29,7 +29,8 @@ public class PulsePlaybackWorker implements Runnable {
     private final Listener listener;
 
     private volatile boolean stopped = false;
-    private volatile int bufferSizeMillis = 2000;
+    private volatile long bufferSizeMillisAhead = 125;
+    private volatile long bufferSizeMillisBehind = 1000;
 
     private Throwable error;
     private Socket sock;
@@ -144,18 +145,18 @@ public class PulsePlaybackWorker implements Runnable {
     }
 
     private void manageBufferSize() throws IOException {
-        final long bufferSizeMillis = this.bufferSizeMillis;
-
-        // size < 0 means infinite buffer: never skip anything
-        if (bufferSizeMillis >= 0) {
-            final int bufferSize = Math.max(minBufferSize, (int) (byteRate * bufferSizeMillis / 1000));
+        // bufferSizeMillisBehind < 0 means infinite buffer: never skip anything
+        if (bufferSizeMillisBehind >= 0) {
+            final long bufMillisTotal = bufferSizeMillisAhead + bufferSizeMillisBehind;
+            final int bufferSize = Math.max(minBufferSize, (int) (byteRate * bufMillisTotal / 1000));
 
             final int available = audioData.available();
             if (available > bufferSize) {
                 // We have more bytes than fit into our buffer. Skip forward so
                 // we don't get left behind.
-                // [bufferSize / 2]: Try to keep our buffer half-filled.
-                final long wantSkip = numSkip + (available - bufferSize / 2);
+                // Keep our buffer bufferSizeMillisBehind filled.
+                final long bufferBehindSize = Math.max(minBufferSize, byteRate * bufferSizeMillisBehind / 1000);
+                final long wantSkip = numSkip + available - bufferBehindSize;
                 final long actual = audioData.skip(wantSkip);
                 // If we happened to skip part of a pair of samples, we need
                 // to skip the remaining bytes of it when writing to audioTrack.
@@ -284,8 +285,9 @@ public class PulsePlaybackWorker implements Runnable {
         throw new AssertionError("should never happen");
     }
 
-    public void setMaxBufferMillis(int millis) {
-        this.bufferSizeMillis = millis;
+    public void setMaxBufferMillis(int millisAhead, int millisBehind) {
+        bufferSizeMillisAhead = millisAhead;
+        bufferSizeMillisBehind = millisBehind;
     }
 
     public interface Listener {

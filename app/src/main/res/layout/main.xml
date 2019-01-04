@@ -80,14 +80,34 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.7"
-            android:text="@string/input_buffer_size" />
+            android:layout_weight="0.5"
+            android:text="@string/input_buffer_size_ahead" />
 
         <Spinner
-            android:id="@+id/bufferSizeSpinner"
+            android:id="@+id/bufferSizeSpinnerAhead"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.3" />
+            android:layout_weight="0.5" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="14dp"
+        android:paddingRight="14dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.5"
+            android:text="@string/input_buffer_size_behind" />
+
+        <Spinner
+            android:id="@+id/bufferSizeSpinnerBehind"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.5" />
 
     </LinearLayout>
 

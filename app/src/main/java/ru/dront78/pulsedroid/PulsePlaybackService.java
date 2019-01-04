@@ -39,7 +39,8 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
     private PulsePlaybackWorker playWorker = null;
     @Nullable
     private Thread playWorkerThread;
-    private int bufferMillis = 2000;
+    private volatile int bufferMillisAhead = 125;
+    private volatile int bufferMillisBehind = 1000;
 
     private final MutableLiveData<PlayState> playState = new MutableLiveData<>();
 
@@ -142,7 +143,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
             stopWorker();
         }
         playWorker = new PulsePlaybackWorker(server, port, wakeLock, handler, this);
-        playWorker.setMaxBufferMillis(bufferMillis);
+        playWorker.setMaxBufferMillis(bufferMillisAhead, bufferMillisBehind);
         playWorkerThread = new Thread(playWorker);
 
         Notification notif = buildNotification(R.string.playback_status_starting).build();
@@ -214,10 +215,11 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
         return playWorker == null ? null : playWorker.getError();
     }
 
-    public void setBufferMillis(int bufferSize) {
-        this.bufferMillis = bufferSize;
+    public void setBufferMillis(int bufferSizeAhead, int bufferSizeBehind) {
+        this.bufferMillisAhead = bufferSizeAhead;
+        this.bufferMillisBehind = bufferSizeBehind;
         if (playWorker != null) {
-            playWorker.setMaxBufferMillis(bufferSize);
+            playWorker.setMaxBufferMillis(bufferSizeAhead, bufferSizeBehind);
         }
     }
 

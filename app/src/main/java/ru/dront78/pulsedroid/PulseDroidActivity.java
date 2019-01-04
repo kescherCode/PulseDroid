@@ -18,12 +18,22 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import java.util.Arrays;
+import java.util.List;
+
 
 public class PulseDroidActivity extends AppCompatActivity {
 
+    public static final int DEFAULT_INDEX_AHEAD = 2;
+    public static final int DEFAULT_INDEX_BEHIND = 3;
+    private static final List<Integer> BUFFER_SIZES_AHEAD = Arrays.asList(0, 64, 125, 250, 500, 1000, 2000);
+    private static final List<Integer> BUFFER_SIZES_BEHIND = Arrays.asList(0, 125, 250, 500, 1000, 2000, 5000, 10000, -1);
+
     private Button playButton = null;
-    private Spinner bufferSizeSpinner;
-    private BufferSizeAdapter bufferSizeAdapter;
+    private Spinner bufferSizeSpinnerAhead;
+    private Spinner bufferSizeSpinnerBehind;
+    private BufferSizeAdapter bufferSizeAdapterAhead;
+    private BufferSizeAdapter bufferSizeAdapterBehind;
     private CheckBox autoStartCheckBox = null;
     private TextView errorText;
 
@@ -68,35 +78,15 @@ public class PulseDroidActivity extends AppCompatActivity {
         autoStartCheckBox = findViewById(R.id.auto_start);
         playButton = findViewById(R.id.ButtonPlay);
         errorText = findViewById(R.id.errorText);
-        bufferSizeSpinner = findViewById(R.id.bufferSizeSpinner);
+        bufferSizeSpinnerAhead = findViewById(R.id.bufferSizeSpinnerAhead);
+        bufferSizeSpinnerBehind = findViewById(R.id.bufferSizeSpinnerBehind);
+
+        bufferSizeAdapterAhead = new BufferSizeAdapter(this, BUFFER_SIZES_AHEAD);
+        bufferSizeAdapterBehind = new BufferSizeAdapter(this, BUFFER_SIZES_BEHIND);
+        setUpSpinner(bufferSizeSpinnerAhead, bufferSizeAdapterAhead, "buffer_ms_ahead", DEFAULT_INDEX_AHEAD);
+        setUpSpinner(bufferSizeSpinnerBehind, bufferSizeAdapterBehind, "buffer_ms", DEFAULT_INDEX_BEHIND);
 
         final SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-
-        bufferSizeAdapter = new BufferSizeAdapter(this);
-        bufferSizeSpinner.setAdapter(bufferSizeAdapter);
-
-        SharedPreferences preferences = getPreferences(MODE_PRIVATE);
-        int bufferMillis = preferences.getInt("buffer_ms", 2000);
-        int pos = bufferSizeAdapter.getItemPosition(bufferMillis);
-        bufferSizeSpinner.setSelection(pos >= 0 ? pos : BufferSizeAdapter.DEFAULT_INDEX);
-
-        bufferSizeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                int millis = bufferSizeAdapter.getItem(position);
-                getPreferences(MODE_PRIVATE).edit()
-                        .putInt("buffer_ms", millis)
-                        .apply();
-                if (boundService != null) {
-                    boundService.setBufferMillis(millis);
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
-
         server.setText(sharedPref.getString("server", ""));
         port.setText(sharedPref.getString("port", ""));
         autoStartCheckBox.setChecked(sharedPref.getBoolean("auto_start", false));
@@ -110,6 +100,34 @@ public class PulseDroidActivity extends AppCompatActivity {
         });
 
         doBindService();
+    }
+
+    private void setUpSpinner(Spinner spinner, BufferSizeAdapter adapter, String prefKey, int defaultIndex) {
+        spinner.setAdapter(adapter);
+
+        SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+        int bufferMillis = preferences.getInt(prefKey, adapter.getItem(defaultIndex));
+        int pos = adapter.getItemPosition(bufferMillis);
+        spinner.setSelection(pos >= 0 ? pos : defaultIndex);
+
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                int bufferMillis1 = adapter.getItem(spinner.getSelectedItemPosition());
+                getPreferences(MODE_PRIVATE).edit()
+                        .putInt(prefKey, bufferMillis1)
+                        .apply();
+                int aheadMillis = bufferSizeAdapterAhead.getItem(bufferSizeSpinnerAhead.getSelectedItemPosition());
+                int behindMillis = bufferSizeAdapterBehind.getItem(bufferSizeSpinnerBehind.getSelectedItemPosition());
+                if (boundService != null) {
+                    boundService.setBufferMillis(aheadMillis, behindMillis);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
     }
 
     @Override
@@ -188,10 +206,11 @@ public class PulseDroidActivity extends AppCompatActivity {
                 .putString("port", Integer.toString(port))
                 .putBoolean("auto_start", autoStartCheckBox.isChecked())
                 .apply();
-        int bufferSize = bufferSizeAdapter.getItem(bufferSizeSpinner.getSelectedItemPosition());
+        int bufferSizeAhead = bufferSizeAdapterAhead.getItem(bufferSizeSpinnerAhead.getSelectedItemPosition());
+        int bufferSizeBehind = bufferSizeAdapterBehind.getItem(bufferSizeSpinnerBehind.getSelectedItemPosition());
 
         if (boundService != null) {
-            boundService.setBufferMillis(bufferSize);
+            boundService.setBufferMillis(bufferSizeAhead, bufferSizeBehind);
             boundService.play(server, port);
         }
     }

@@ -8,18 +8,16 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import java.text.DecimalFormat;
-import java.util.Arrays;
 import java.util.List;
 
 class BufferSizeAdapter extends BaseAdapter {
 
-    public static final int DEFAULT_INDEX = 3;
+    private final Context context;
+    private final List<Integer> presets;
 
-    private Context context;
-    private List<Integer> presets = Arrays.asList(0, 125, 250, 500, 1000, 2000, 5000, 10000, -1);
-
-    BufferSizeAdapter(Context context) {
+    BufferSizeAdapter(Context context, List<Integer> presets) {
         this.context = context;
+        this.presets = presets;
     }
 
     @Override
