@@ -22,6 +22,9 @@ import ru.dront78.pulsedroid.exception.StoppedException;
 
 public class PulsePlaybackWorker implements Runnable {
 
+    /** How often we try to receive per second. */
+    private static final int LOOPS_PER_SECOND = 4;
+
     private final String host;
     private final int port;
     private final WakeLock wakeLock;
@@ -31,6 +34,7 @@ public class PulsePlaybackWorker implements Runnable {
     private volatile boolean stopped = false;
     private volatile long bufferSizeMillisAhead = 125;
     private volatile long bufferSizeMillisBehind = 1000;
+    private boolean waitingForBufferFill = true;
 
     private Throwable error;
     private Socket sock;
@@ -78,19 +82,29 @@ public class PulsePlaybackWorker implements Runnable {
         try {
             setup();
 
+            boolean didBuffer = false;
             boolean started = false;
             while (!stopped) {
                 wakeLock.acquire(1000);
 
                 manageBufferSize();
 
-                readFromSocket();
+                if (!waitingForBufferFill) {
+                    readFromSocket();
 
-                writeToAudioTrack();
+                    writeToAudioTrack();
 
-                if (!started) {
-                    started = true;
-                    handler.post(() -> listener.onPlaybackStarted(this));
+                    if (!started) {
+                        started = true;
+                        handler.post(() -> listener.onPlaybackStarted(this));
+                    }
+                } else {
+                    if (!didBuffer) {
+                        didBuffer = true;
+                        handler.post(() -> listener.onPlaybackBuffering(this));
+                    }
+                    // Sleep for about the time this loop runs under normal conditions.
+                    Thread.sleep(1000 / LOOPS_PER_SECOND);
                 }
             }
 
@@ -120,8 +134,7 @@ public class PulsePlaybackWorker implements Runnable {
                 AudioFormat.CHANNEL_CONFIGURATION_STEREO,
                 AudioFormat.ENCODING_PCM_16BIT);
 
-        // Try to receive 4 times per second.
-        chunkSize = byteRate / 4;
+        chunkSize = byteRate / LOOPS_PER_SECOND;
 
         connect();
 
@@ -145,17 +158,24 @@ public class PulsePlaybackWorker implements Runnable {
     }
 
     private void manageBufferSize() throws IOException {
+        long bufferSizeMillisBehind = this.bufferSizeMillisBehind;
+
         // bufferSizeMillisBehind < 0 means infinite buffer: never skip anything
         if (bufferSizeMillisBehind >= 0) {
             final long bufMillisTotal = bufferSizeMillisAhead + bufferSizeMillisBehind;
+            final long bufferBehindSize = Math.max(minBufferSize, byteRate * bufferSizeMillisBehind / 1000);
             final int bufferSize = Math.max(minBufferSize, (int) (byteRate * bufMillisTotal / 1000));
 
             final int available = audioData.available();
+
+            if (available > bufferBehindSize) {
+                waitingForBufferFill = false;
+            }
+
             if (available > bufferSize) {
                 // We have more bytes than fit into our buffer. Skip forward so
                 // we don't get left behind.
                 // Keep our buffer bufferSizeMillisBehind filled.
-                final long bufferBehindSize = Math.max(minBufferSize, byteRate * bufferSizeMillisBehind / 1000);
                 final long wantSkip = numSkip + available - bufferBehindSize;
                 final long actual = audioData.skip(wantSkip);
                 // If we happened to skip part of a pair of samples, we need
@@ -169,6 +189,9 @@ public class PulsePlaybackWorker implements Runnable {
                 Log.d("Worker", "skipped: wantSkip=" + wantSkip + " actual=" + actual + " numSkip=" + numSkip + " bufferPos=" + bufferPos);
                 bufferPos = 0;
             }
+        } else {
+            // Don't wait for infinite buffer.
+            waitingForBufferFill = false;
         }
     }
 
@@ -293,6 +316,9 @@ public class PulsePlaybackWorker implements Runnable {
     public interface Listener {
         @MainThread
         void onPlaybackError(@NonNull PulsePlaybackWorker worker, @NonNull Throwable t);
+
+        @MainThread
+        void onPlaybackBuffering(@NonNull PulsePlaybackWorker worker);
 
         @MainThread
         void onPlaybackStarted(@NonNull PulsePlaybackWorker worker);

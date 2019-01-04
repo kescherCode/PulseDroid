@@ -3,6 +3,7 @@ package ru.dront78.pulsedroid;
 public enum PlayState {
     STOPPED(false),
     STARTING(true),
+    BUFFERING(true),
     STARTED(true),
     STOPPING(false);
 

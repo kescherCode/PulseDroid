@@ -20,6 +20,8 @@ import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationCompat;
 
+import static ru.dront78.pulsedroid.PlayState.BUFFERING;
+
 public class PulsePlaybackService extends Service implements PulsePlaybackWorker.Listener {
     /**
      * Unique ID for the Notification.
@@ -104,6 +106,13 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
     }
 
     @Override
+    public void onPlaybackBuffering(@NonNull PulsePlaybackWorker worker) {
+        if (worker == playWorker) {
+            notifyState(BUFFERING);
+        }
+    }
+
+    @Override
     public void onPlaybackStarted(@NonNull PulsePlaybackWorker worker) {
         if (worker == playWorker) {
             notifyState(PlayState.STARTED);
@@ -184,6 +193,9 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
                 break;
             case STARTING:
                 statusResId = R.string.playback_status_starting;
+                break;
+            case BUFFERING:
+                statusResId = R.string.playback_status_buffering;
                 break;
             case STARTED:
                 statusResId = R.string.playback_status_playing;
