@@ -61,7 +61,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
 
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         assert pm != null;
-        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "pulse");
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "pulsedroid:wakelock");
 
         if (Build.VERSION.SDK_INT >= 26) {
             notifManager.createNotificationChannel(new NotificationChannel(
