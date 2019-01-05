@@ -23,7 +23,7 @@ import ru.dront78.pulsedroid.exception.StoppedException;
 public class PulsePlaybackWorker implements Runnable {
 
     /** How often we try to receive per second. */
-    private static final int LOOPS_PER_SECOND = 4;
+    private static final int LOOPS_PER_SECOND = 8;
 
     private final String host;
     private final int port;
