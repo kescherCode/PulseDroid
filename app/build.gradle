@@ -15,7 +15,7 @@ android {
     defaultConfig {
         applicationId "ru.dront78.pulsedroid"
         minSdkVersion 14
-        targetSdkVersion 27
+        targetSdkVersion 30
 
         versionCode 1
         version "1.0"
