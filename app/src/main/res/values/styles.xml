@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light">
+        <item name="colorPrimary">#cfd8dc</item>
+        <item name="colorPrimaryVariant">#ffffff</item>
+        <item name="colorOnPrimary">#ffffff</item>
+        <item name="colorSecondary">#4dd0e1</item>
+        <item name="colorSecondaryVariant">#88ffff</item>
+        <item name="colorOnSecondary">#009faf</item>
+        <item name="colorPrimaryDark">#9ea7aa</item>
+    </style>
+</resources>
