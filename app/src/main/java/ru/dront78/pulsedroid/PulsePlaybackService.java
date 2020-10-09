@@ -13,6 +13,7 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.PowerManager;
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
@@ -31,8 +32,8 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
     private static final String ACTION_STOP = PulsePlaybackService.class.getName() + ".STOP";
 
     private final IBinder binder = new LocalBinder();
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
-    private Handler handler = new Handler();
     private NotificationManager notifManager;
     private PowerManager.WakeLock wakeLock;
     private PendingIntent stopPendingIntent;
@@ -53,7 +54,6 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
 
     @Override
     public void onCreate() {
-        handler = new Handler();
         notifManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         playState.setValue(PlayState.STOPPED);
 
