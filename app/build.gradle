@@ -4,8 +4,8 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 
 android {
-    compileSdkVersion 27
-    buildToolsVersion "27.0.3"
+    compileSdkVersion 30
+    buildToolsVersion '30.0.2'
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -48,7 +48,7 @@ dependencies {
     implementation "android.arch.lifecycle:extensions:$lifecycle_version"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.13'
     testImplementation 'com.nhaarman:mockito-kotlin:1.5.0'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
