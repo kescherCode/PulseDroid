@@ -18,7 +18,7 @@ allows streaming audio to an Android device.
 
     Run the following to add and configure the module; of course, the port and source can be modified as you want:
 
-        pactl load-module module-simple-protocol-tcp rate=48000 format=s16le channels=2 source=0 record=true port=12345 listen=0.0.0.0
+        pactl load-module module-simple-protocol-tcp rate=44100 format=s16le channels=1 source=0 record=true port=12345 listen=0.0.0.0
 
 2. Install the app and start it.
 
@@ -54,7 +54,7 @@ And now a message from the original creator at the beginning of this project:
 >
 > It is very simple to setup a PulseAudio server to send audio output over network
 >
->     pactl load-module module-simple-protocol-tcp rate=48000 format=s16le channels=2 source=alsa_output.pci-0000_00_1b.0.analog-stereo.monitor record=true port=server_port listen=ip_address
+>     pactl load-module module-simple-protocol-tcp rate=44100 format=s16le channels=1 source=alsa_output.pci-0000_00_1b.0.analog-stereo.monitor record=true port=server_port listen=ip_address
 >                                                                                             ^^^^^ change this with oyur own device ^^^^^^^
 >
 > And now you just connect to ip:port via PulseDroid software and enjoy

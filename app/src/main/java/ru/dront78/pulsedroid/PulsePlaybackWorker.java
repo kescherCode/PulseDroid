@@ -126,7 +126,7 @@ public class PulsePlaybackWorker implements Runnable {
     }
 
     private void setup() throws IOException {
-        final int sampleRate = 48000;
+        final int sampleRate = 44100;
         // bytes per second = sample rate * 2 bytes per sample * 2 channels
         byteRate = sampleRate * 2 * 2;
 
@@ -142,7 +142,7 @@ public class PulsePlaybackWorker implements Runnable {
 
         // Always using minimum buffer size for minimum lag.
         audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
-                sampleRate, AudioFormat.CHANNEL_CONFIGURATION_STEREO,
+                sampleRate, AudioFormat.CHANNEL_CONFIGURATION_MONO,
                 AudioFormat.ENCODING_PCM_16BIT, minBufferSize,
                 AudioTrack.MODE_STREAM);
         if (audioTrack.getState() != AudioTrack.STATE_INITIALIZED) {
