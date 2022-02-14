@@ -26,21 +26,23 @@ public class PulseDroidActivity extends AppCompatActivity {
 
     public static final int DEFAULT_INDEX_AHEAD = 2;
     public static final int DEFAULT_INDEX_BEHIND = 3;
+    public static final int DEFAULT_INDEX_SAMPLE_RATES = 0;
+    public static final int DEFAULT_INDEX_CHANNELS = 0;
     private static final List<Integer> BUFFER_SIZES_AHEAD = Arrays.asList(0, 64, 125, 250, 500, 1000, 2000);
     private static final List<Integer> BUFFER_SIZES_BEHIND = Arrays.asList(0, 125, 250, 500, 1000, 2000, 5000, 10000, -1);
+    private static final List<Integer> SAMPLE_RATES = Arrays.asList(44100, 48000);
+    private static final List<Integer> CHANNELS = Arrays.asList(1, 2);
 
     private Button playButton = null;
-    private Spinner bufferSizeSpinnerAhead;
-    private Spinner bufferSizeSpinnerBehind;
-    private BufferSizeAdapter bufferSizeAdapterAhead;
-    private BufferSizeAdapter bufferSizeAdapterBehind;
-    private CheckBox autoStartCheckBox = null;
+    private Spinner bufferSizeSpinnerAhead, bufferSizeSpinnerBehind, sampleRateSpinner, channelSpinner;
+    private SimpleRowAdapter bufferSizeAdapterAhead, bufferSizeAdapterBehind, sampleRateAdapter, channelAdapter;
+    private CheckBox autoStartCheckBox = null, restartOnErrorCheckBox = null;
     private TextView errorText;
 
     private PulsePlaybackService boundService;
     private boolean isBound = false;
 
-    private ServiceConnection mConnection = new ServiceConnection() {
+    private final ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             // This is called when the connection with the service has been
             // established, giving us the service object we can use to
@@ -76,20 +78,28 @@ public class PulseDroidActivity extends AppCompatActivity {
         final EditText server = findViewById(R.id.EditTextServer);
         final EditText port = findViewById(R.id.EditTextPort);
         autoStartCheckBox = findViewById(R.id.auto_start);
+        restartOnErrorCheckBox = findViewById(R.id.restart_on_error);
         playButton = findViewById(R.id.ButtonPlay);
         errorText = findViewById(R.id.errorText);
         bufferSizeSpinnerAhead = findViewById(R.id.bufferSizeSpinnerAhead);
         bufferSizeSpinnerBehind = findViewById(R.id.bufferSizeSpinnerBehind);
+        sampleRateSpinner = findViewById(R.id.sampleRateSpinner);
+        channelSpinner = findViewById(R.id.channelSpinner);
 
         bufferSizeAdapterAhead = new BufferSizeAdapter(this, BUFFER_SIZES_AHEAD);
         bufferSizeAdapterBehind = new BufferSizeAdapter(this, BUFFER_SIZES_BEHIND);
+        sampleRateAdapter = new SimpleRowAdapter(SAMPLE_RATES);
+        channelAdapter = new ChannelAdapter(this, CHANNELS);
         setUpSpinner(bufferSizeSpinnerAhead, bufferSizeAdapterAhead, "buffer_ms_ahead", DEFAULT_INDEX_AHEAD);
         setUpSpinner(bufferSizeSpinnerBehind, bufferSizeAdapterBehind, "buffer_ms", DEFAULT_INDEX_BEHIND);
+        setUpSpinner(sampleRateSpinner, sampleRateAdapter, "sample_rate", DEFAULT_INDEX_SAMPLE_RATES);
+        setUpSpinner(channelSpinner, channelAdapter, "channels", DEFAULT_INDEX_CHANNELS);
 
         final SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
         server.setText(sharedPref.getString("server", ""));
         port.setText(sharedPref.getString("port", ""));
         autoStartCheckBox.setChecked(sharedPref.getBoolean("auto_start", false));
+        restartOnErrorCheckBox.setChecked(sharedPref.getBoolean("restart_on_error", false));
 
         playButton.setOnClickListener(v -> {
             if (boundService.getPlayState().isActive()) {
@@ -102,7 +112,7 @@ public class PulseDroidActivity extends AppCompatActivity {
         doBindService();
     }
 
-    private void setUpSpinner(Spinner spinner, BufferSizeAdapter adapter, String prefKey, int defaultIndex) {
+    private void setUpSpinner(Spinner spinner, SimpleRowAdapter adapter, String prefKey, int defaultIndex) {
         spinner.setAdapter(adapter);
 
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
@@ -209,6 +219,7 @@ public class PulseDroidActivity extends AppCompatActivity {
                 .putString("server", server)
                 .putString("port", Integer.toString(port))
                 .putBoolean("auto_start", autoStartCheckBox.isChecked())
+                .putBoolean("restart_on_error", restartOnErrorCheckBox.isChecked())
                 .apply();
         int bufferSizeAhead = bufferSizeAdapterAhead.getItem(bufferSizeSpinnerAhead.getSelectedItemPosition());
         int bufferSizeBehind = bufferSizeAdapterBehind.getItem(bufferSizeSpinnerBehind.getSelectedItemPosition());

@@ -27,7 +27,8 @@
             android:layout_weight="0.3"
             android:hint="@string/input_host"
             android:inputType="text"
-            android:saveEnabled="true" />
+            android:saveEnabled="true"
+            android:importantForAutofill="no" />
     </LinearLayout>
 
     <LinearLayout
@@ -52,7 +53,8 @@
             android:hint="@string/input_port"
             android:inputType="number"
             android:saveEnabled="true"
-            android:typeface="normal" />
+            android:typeface="normal"
+            android:importantForAutofill="no"/>
     </LinearLayout>
 
     <Button
@@ -67,22 +69,21 @@
         android:id="@+id/LinearLayoutCheckboxes"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingLeft="14dp"
         android:paddingRight="14dp">
 
         <CheckBox
             android:id="@+id/auto_start"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="14dp"
-            android:layout_marginRight="14dp"
-            android:text="@string/auto_start" />
+            android:layout_marginEnd="14dp"
+            android:text="@string/auto_start"
+            android:layout_marginRight="14dp" />
 
         <CheckBox
             android:id="@+id/restart_on_error"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="14dp"
-            android:layout_marginRight="14dp"
             android:text="@string/restart_on_error" />
     </LinearLayout>
 
@@ -156,7 +157,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
-            android:text="@string/MonoSlashStereo" />
+            android:text="@string/Channels" />
 
         <Spinner
             android:id="@+id/channelSpinner"

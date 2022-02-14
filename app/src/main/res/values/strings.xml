@@ -26,5 +26,7 @@
     <string name="input_buffer_size_behind">Max buffer behind</string>
     <string name="restart_on_error">Restart on error</string>
     <string name="sample_rate">Sample rate</string>
-    <string name="MonoSlashStereo">Mono/Stereo</string>
+    <string name="Channels">Channels</string>
+    <string name="Mono">Mono</string>
+    <string name="Stereo">Stereo</string>
 </resources>
