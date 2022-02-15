@@ -5,9 +5,10 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Handler;
 import android.os.PowerManager.WakeLock;
+import android.util.Log;
+
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
-import android.util.Log;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -22,7 +23,9 @@ import ru.dront78.pulsedroid.exception.StoppedException;
 
 public class PulsePlaybackWorker implements Runnable {
 
-    /** How often we try to receive per second. */
+    /**
+     * How often we try to receive per second.
+     */
     private static final int LOOPS_PER_SECOND = 8;
 
     private final String host;
@@ -32,8 +35,8 @@ public class PulsePlaybackWorker implements Runnable {
     private final Listener listener;
 
     private volatile boolean stopped = false;
-    private volatile long bufferSizeMillisAhead = 125;
-    private volatile long bufferSizeMillisBehind = 1000;
+    private volatile long bufferSizeMillisAhead = 125, bufferSizeMillisBehind = 1000;
+    private volatile int sampleRate = 44100, channels = 1;
     private boolean waitingForBufferFill = true;
 
     private Throwable error;
@@ -42,11 +45,7 @@ public class PulsePlaybackWorker implements Runnable {
     private AudioTrack audioTrack;
     private byte[] audioBuffer;
 
-    private int numSkip;
-    private int bufferPos;
-    private int chunkSize;
-    private int minBufferSize;
-    private int byteRate;
+    private int numSkip, bufferPos, chunkSize, minBufferSize, byteRate;
 
     PulsePlaybackWorker(String host, int port, WakeLock wakeLock, Handler handler, Listener listener) {
         this.host = host;
@@ -126,13 +125,25 @@ public class PulsePlaybackWorker implements Runnable {
     }
 
     private void setup() throws IOException {
-        final int sampleRate = 44100;
         // bytes per second = sample rate * 2 bytes per sample * 2 channels
         byteRate = sampleRate * 2 * 2;
 
         minBufferSize = AudioTrack.getMinBufferSize(sampleRate,
                 AudioFormat.CHANNEL_CONFIGURATION_STEREO,
                 AudioFormat.ENCODING_PCM_16BIT);
+
+        int channelConfig;
+        switch (channels) {
+            case 1:
+                channelConfig = AudioFormat.CHANNEL_CONFIGURATION_MONO;
+                break;
+            case 2:
+                channelConfig = AudioFormat.CHANNEL_CONFIGURATION_STEREO;
+                break;
+            default:
+                channelConfig = AudioFormat.CHANNEL_CONFIGURATION_INVALID;
+                break;
+        }
 
         chunkSize = byteRate / LOOPS_PER_SECOND;
 
@@ -142,13 +153,13 @@ public class PulsePlaybackWorker implements Runnable {
 
         // Always using minimum buffer size for minimum lag.
         audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
-                sampleRate, AudioFormat.CHANNEL_CONFIGURATION_MONO,
+                sampleRate, channelConfig,
                 AudioFormat.ENCODING_PCM_16BIT, minBufferSize,
                 AudioTrack.MODE_STREAM);
         if (audioTrack.getState() != AudioTrack.STATE_INITIALIZED) {
             throw new IllegalStateException(
                     "Could not initialize AudioTrack."
-                    + " state == " + audioTrack.getState());
+                            + " state == " + audioTrack.getState());
         }
         audioTrack.play();
 
@@ -266,7 +277,7 @@ public class PulsePlaybackWorker implements Runnable {
      * This behaves like the {@link Socket Socket(String, int)} constructor, but
      * allows referencing the socket and can be interrupted with {@link #stop()}.
      *
-     * @throws IOException If connection to the host fails.
+     * @throws IOException      If connection to the host fails.
      * @throws StoppedException If {@link #stopped} was set.
      */
     private void connect() throws IOException {
@@ -308,9 +319,11 @@ public class PulsePlaybackWorker implements Runnable {
         throw new AssertionError("should never happen");
     }
 
-    public void setMaxBufferMillis(int millisAhead, int millisBehind) {
+    public void setBufferSettings(int millisAhead, int millisBehind, int sampleRate, int channels) {
         bufferSizeMillisAhead = millisAhead;
         bufferSizeMillisBehind = millisBehind;
+        this.sampleRate = sampleRate;
+        this.channels = channels;
     }
 
     public interface Listener {

@@ -10,8 +10,8 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:paddingLeft="14dp"
-        android:paddingRight="14dp"
-        android:paddingTop="14dp">
+        android:paddingTop="14dp"
+        android:paddingRight="14dp">
 
         <TextView
             android:id="@+id/TextViewServer"
@@ -26,9 +26,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="0.3"
             android:hint="@string/input_host"
+            android:importantForAutofill="no"
             android:inputType="text"
-            android:saveEnabled="true"
-            android:importantForAutofill="no" />
+            android:saveEnabled="true" />
     </LinearLayout>
 
     <LinearLayout
@@ -51,10 +51,50 @@
             android:layout_height="wrap_content"
             android:layout_weight="0.3"
             android:hint="@string/input_port"
+            android:importantForAutofill="no"
             android:inputType="number"
             android:saveEnabled="true"
-            android:typeface="normal"
-            android:importantForAutofill="no"/>
+            android:typeface="normal" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="14dp"
+        android:paddingRight="14dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.5"
+            android:text="@string/sample_rate" />
+
+        <Spinner
+            android:id="@+id/sampleRateSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.5" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="14dp"
+        android:paddingRight="14dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.5"
+            android:text="@string/Channels" />
+
+        <Spinner
+            android:id="@+id/channelSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.5" />
+
     </LinearLayout>
 
     <Button
@@ -77,8 +117,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="14dp"
-            android:text="@string/auto_start"
-            android:layout_marginRight="14dp" />
+            android:layout_marginRight="14dp"
+            android:text="@string/auto_start" />
 
         <CheckBox
             android:id="@+id/restart_on_error"
@@ -121,46 +161,6 @@
 
         <Spinner
             android:id="@+id/bufferSizeSpinnerBehind"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.5" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingLeft="14dp"
-        android:paddingRight="14dp">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.5"
-            android:text="@string/sample_rate" />
-
-        <Spinner
-            android:id="@+id/sampleRateSpinner"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.5" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingLeft="14dp"
-        android:paddingRight="14dp">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.5"
-            android:text="@string/Channels" />
-
-        <Spinner
-            android:id="@+id/channelSpinner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0.5" />

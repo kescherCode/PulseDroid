@@ -2,7 +2,6 @@ package ru.dront78.pulsedroid;
 
 import android.content.Context;
 
-import java.text.DecimalFormat;
 import java.util.List;
 
 public class ChannelAdapter extends SimpleRowAdapter {
