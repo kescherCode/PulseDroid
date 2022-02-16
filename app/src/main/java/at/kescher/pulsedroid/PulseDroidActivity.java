@@ -1,4 +1,4 @@
-package ru.dront78.pulsedroid;
+package at.kescher.pulsedroid;
 
 import android.content.ComponentName;
 import android.content.Context;

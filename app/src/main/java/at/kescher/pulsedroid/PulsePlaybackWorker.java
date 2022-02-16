@@ -1,4 +1,4 @@
-package ru.dront78.pulsedroid;
+package at.kescher.pulsedroid;
 
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -18,15 +18,16 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.concurrent.TimeoutException;
 
-import ru.dront78.pulsedroid.exception.StoppedException;
+import at.kescher.pulsedroid.exception.StoppedException;
 
 public class PulsePlaybackWorker implements Runnable {
 
-    /**
-     * How often we try to receive per second.
-     */
+    // How often we try to receive per second.
     private static final int LOOPS_PER_SECOND = 8;
+    // How many loop iterations in the buffering state should be a timeout.
+    private static final int BUFFERING_LOOP_TIMEOUT = LOOPS_PER_SECOND * 5;
 
     private final String host;
     private final int port;
@@ -81,6 +82,7 @@ public class PulsePlaybackWorker implements Runnable {
         try {
             setup();
 
+            int bufferingIterations = 0;
             boolean didBuffer = false;
             boolean started = false;
             while (!stopped) {
@@ -101,6 +103,10 @@ public class PulsePlaybackWorker implements Runnable {
                     if (!didBuffer) {
                         didBuffer = true;
                         handler.post(() -> listener.onPlaybackBuffering(this));
+                    }
+                    bufferingIterations++;
+                    if (bufferingIterations > BUFFERING_LOOP_TIMEOUT) {
+                        throw new TimeoutException("Buffering went on for longer than 5 seconds");
                     }
                     // Sleep for about the time this loop runs under normal conditions.
                     Thread.sleep(1000 / LOOPS_PER_SECOND);

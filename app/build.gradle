@@ -13,7 +13,7 @@ android {
     }
 
     defaultConfig {
-        applicationId 'com.lodriguez.pulsedroid'
+        applicationId 'at.kescher.pulsedroid'
         minSdkVersion 14
         targetSdkVersion 32
 

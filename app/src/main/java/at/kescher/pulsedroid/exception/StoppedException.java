@@ -1,4 +1,4 @@
-package ru.dront78.pulsedroid.exception;
+package at.kescher.pulsedroid.exception;
 
 public class StoppedException extends RuntimeException {
     public StoppedException() {

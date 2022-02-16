@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="ru.dront78.pulsedroid">
+    package="at.kescher.pulsedroid">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -11,11 +11,12 @@
         android:allowBackup="true"
         android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
         <activity
-            android:name=".PulseDroidActivity"
+            android:name="at.kescher.pulsedroid.PulseDroidActivity"
             android:launchMode="singleInstance"
             android:exported="true">
             <intent-filter>
@@ -28,7 +29,7 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".PulsePlaybackService"
+            android:name="at.kescher.pulsedroid.PulsePlaybackService"
             android:label="@string/playback_service_label" />
     </application>
 </manifest>

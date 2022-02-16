@@ -1,4 +1,4 @@
-package ru.dront78.pulsedroid;
+package at.kescher.pulsedroid;
 
 import android.content.Context;
 
@@ -15,9 +15,9 @@ public class ChannelAdapter extends SimpleRowAdapter {
     @Override
     protected String formatEntry(int item) {
         if (item == 1) {
-            return "Mono";
+            return context.getString(R.string.Mono);
         } else if (item == 2) {
-            return "Stereo";
+            return context.getString(R.string.Stereo);
         }
         return Integer.toString(item);
     }

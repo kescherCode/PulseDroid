@@ -16,7 +16,6 @@
     <string name="btn_stop">Stop</string>
     <string name="btn_stopping">Stopping…</string>
     <string name="btn_waiting">Waiting…</string>
-    <string name="btn_exit">Exit</string>
     <string name="input_port">Port</string>
     <string name="input_host">Host</string>
     <string name="play_error">Playback error:\n%1$s</string>

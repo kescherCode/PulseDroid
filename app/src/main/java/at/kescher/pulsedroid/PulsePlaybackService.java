@@ -1,6 +1,6 @@
-package ru.dront78.pulsedroid;
+package at.kescher.pulsedroid;
 
-import static ru.dront78.pulsedroid.PlayState.BUFFERING;
+import static at.kescher.pulsedroid.PlayState.BUFFERING;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
