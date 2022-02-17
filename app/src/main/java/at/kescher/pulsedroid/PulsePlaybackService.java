@@ -35,7 +35,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
     private final IBinder binder = new LocalBinder();
     private final Handler handler = new Handler(Looper.getMainLooper());
 
-    private NotificationManager notifManager;
+    private NotificationManager notificationManager;
     private PowerManager.WakeLock wakeLock;
     private PendingIntent stopPendingIntent;
 
@@ -56,7 +56,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
 
     @Override
     public void onCreate() {
-        notifManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         playState.setValue(PlayState.STOPPED);
 
         Intent intent = new Intent(this, PulsePlaybackService.class)
@@ -69,7 +69,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "pulsedroid:wakelock");
 
         if (Build.VERSION.SDK_INT >= 26) {
-            notifManager.createNotificationChannel(new NotificationChannel(
+            notificationManager.createNotificationChannel(new NotificationChannel(
                     getString(R.string.service_notification_channel),
                     getString(R.string.playback_service_label),
                     NotificationManager.IMPORTANCE_LOW));
@@ -92,7 +92,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(true);
         } else {
-            notifManager.cancel(NOTIFICATION);
+            notificationManager.cancel(NOTIFICATION);
         }
 
         stop();
@@ -227,7 +227,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
                 throw new IllegalArgumentException();
         }
         Notification notif = buildNotification(statusResId).build();
-        notifManager.notify(NOTIFICATION, notif);
+        notificationManager.notify(NOTIFICATION, notif);
     }
 
     public boolean isStartable() {

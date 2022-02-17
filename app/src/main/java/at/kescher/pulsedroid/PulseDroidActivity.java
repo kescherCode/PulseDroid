@@ -22,8 +22,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.Arrays;
 import java.util.List;
 
-import at.kescher.pulsedroid.adapters.DurationAdapter;
 import at.kescher.pulsedroid.adapters.ChannelAdapter;
+import at.kescher.pulsedroid.adapters.DurationAdapter;
 import at.kescher.pulsedroid.adapters.SimpleRowAdapter;
 
 

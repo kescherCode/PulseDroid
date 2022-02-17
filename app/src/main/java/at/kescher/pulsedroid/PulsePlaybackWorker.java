@@ -21,6 +21,12 @@ import java.net.UnknownHostException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import at.kescher.pulsedroid.exception.StoppedException;
@@ -146,7 +152,7 @@ public class PulsePlaybackWorker implements Runnable {
         }
     }
 
-    private void setup() throws IOException {
+    private void setup() throws IOException, ExecutionException, InterruptedException, TimeoutException {
         // bytes per second = sample rate * 2 bytes per sample * 2 channels
         byteRate = sampleRate * 2 * 2;
 
@@ -302,10 +308,18 @@ public class PulsePlaybackWorker implements Runnable {
      * @throws IOException      If connection to the host fails.
      * @throws StoppedException If {@link #stopped} was set.
      */
-    private void connect() throws IOException {
-
-        // We may hang here to resolve a host name. No way to interrupt this so far.
-        InetAddress[] addresses = InetAddress.getAllByName(host);
+    private void connect() throws IOException, ExecutionException, InterruptedException, TimeoutException {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<InetAddress[]> future = executor.submit(() -> InetAddress.getAllByName(host));
+        InetAddress[] addresses;
+        try {
+            addresses = future.get(5, TimeUnit.SECONDS);
+        } catch (TimeoutException | ExecutionException | InterruptedException e) {
+            future.cancel(true);
+            throw e;
+        } finally {
+            executor.shutdownNow();
+        }
         if (addresses.length == 0) {
             throw new UnknownHostException("No addresses returned by InetAddress.getAllByName()");
         }
