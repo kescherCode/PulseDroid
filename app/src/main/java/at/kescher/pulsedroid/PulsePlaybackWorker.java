@@ -18,6 +18,9 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.concurrent.TimeoutException;
 
 import at.kescher.pulsedroid.exception.StoppedException;
@@ -26,8 +29,6 @@ public class PulsePlaybackWorker implements Runnable {
 
     // How often we try to receive per second.
     private static final int LOOPS_PER_SECOND = 8;
-    // How many loop iterations in the buffering state should be a timeout.
-    private static final int BUFFERING_LOOP_TIMEOUT = LOOPS_PER_SECOND * 5;
 
     private final String host;
     private final int port;
@@ -39,6 +40,8 @@ public class PulsePlaybackWorker implements Runnable {
     private volatile long bufferSizeMillisAhead = 125, bufferSizeMillisBehind = 1000;
     private volatile int sampleRate = 44100, channels = 1;
     private boolean waitingForBufferFill = true;
+    // How many milliseconds in the buffering state should be a timeout.
+    private int bufferTimeout = 5000;
 
     private Throwable error;
     private Socket sock;
@@ -82,15 +85,19 @@ public class PulsePlaybackWorker implements Runnable {
         try {
             setup();
 
-            int bufferingIterations = 0;
-            boolean didBuffer = false;
+            LocalDateTime bufferStartTimestamp = LocalDateTime.MAX;
+            boolean didInitialBuffer = false;
             boolean started = false;
+            boolean doSleep = false;
+
             while (!stopped) {
                 wakeLock.acquire(1000);
 
                 manageBufferSize();
 
                 if (!waitingForBufferFill) {
+                    doSleep = false;
+                    bufferStartTimestamp = LocalDateTime.MAX;
                     readFromSocket();
 
                     writeToAudioTrack();
@@ -100,16 +107,25 @@ public class PulsePlaybackWorker implements Runnable {
                         handler.post(() -> listener.onPlaybackStarted(this));
                     }
                 } else {
-                    if (!didBuffer) {
-                        didBuffer = true;
+                    if (!didInitialBuffer) {
+                        didInitialBuffer = true;
                         handler.post(() -> listener.onPlaybackBuffering(this));
                     }
-                    bufferingIterations++;
-                    if (bufferingIterations > BUFFERING_LOOP_TIMEOUT) {
-                        throw new TimeoutException("Buffering went on for longer than 5 seconds");
+                    if (bufferTimeout >= 0) {
+                        if (bufferStartTimestamp == LocalDateTime.MAX) {
+                            bufferStartTimestamp = LocalDateTime.now(Clock.systemUTC());
+                        }
+                        if (Duration.between(bufferStartTimestamp, LocalDateTime.now(Clock.systemUTC())).toMillis() > bufferTimeout) {
+                            throw new TimeoutException(String.format("Buffering went on for longer than %d milliseconds", bufferTimeout));
+                        }
                     }
                     // Sleep for about the time this loop runs under normal conditions.
-                    Thread.sleep(1000 / LOOPS_PER_SECOND);
+                    if (doSleep) {
+                        //noinspection BusyWait
+                        Thread.sleep(1000 / LOOPS_PER_SECOND);
+                    } else {
+                        doSleep = true;
+                    }
                 }
             }
 
@@ -325,11 +341,12 @@ public class PulsePlaybackWorker implements Runnable {
         throw new AssertionError("should never happen");
     }
 
-    public void setBufferSettings(int millisAhead, int millisBehind, int sampleRate, int channels) {
+    public void setBufferSettings(int millisAhead, int millisBehind, int sampleRate, int channels, int bufferTimeout) {
         bufferSizeMillisAhead = millisAhead;
         bufferSizeMillisBehind = millisBehind;
         this.sampleRate = sampleRate;
         this.channels = channels;
+        this.bufferTimeout = bufferTimeout;
     }
 
     public interface Listener {

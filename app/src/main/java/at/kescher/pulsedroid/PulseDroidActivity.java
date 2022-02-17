@@ -22,22 +22,25 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.Arrays;
 import java.util.List;
 
+import at.kescher.pulsedroid.adapters.DurationAdapter;
+import at.kescher.pulsedroid.adapters.ChannelAdapter;
+import at.kescher.pulsedroid.adapters.SimpleRowAdapter;
+
 
 public class PulseDroidActivity extends AppCompatActivity {
 
-    public static final int DEFAULT_INDEX_AHEAD = 2;
-    public static final int DEFAULT_INDEX_BEHIND = 3;
-    public static final int DEFAULT_INDEX_SAMPLE_RATES = 0;
-    public static final int DEFAULT_INDEX_CHANNELS = 0;
-    private static final List<Integer> BUFFER_SIZES_AHEAD = Arrays.asList(0, 64, 125, 250, 500, 1000, 2000);
-    private static final List<Integer> BUFFER_SIZES_BEHIND = Arrays.asList(0, 125, 250, 500, 1000, 2000, 5000, 10000, -1);
-    private static final List<Integer> SAMPLE_RATES = Arrays.asList(44100, 48000);
-    private static final List<Integer> CHANNELS = Arrays.asList(1, 2);
+    public static final int DEFAULT_INDEX_AHEAD = 2, DEFAULT_INDEX_BEHIND = 3, DEFAULT_INDEX_SAMPLE_RATES = 0, DEFAULT_INDEX_CHANNELS = 0, DEFAULT_INDEX_BUFFER_TIMEOUTS = 5;
+    private static final List<Integer>
+            BUFFER_SIZES_AHEAD = Arrays.asList(0, 64, 125, 250, 500, 1000, 2000),
+            BUFFER_SIZES_BEHIND = Arrays.asList(0, 125, 250, 500, 1000, 2000, 5000, 10000, -1),
+            SAMPLE_RATES = Arrays.asList(44100, 48000),
+            CHANNELS = Arrays.asList(1, 2),
+            BUFFER_TIMEOUTS = Arrays.asList(125, 250, 500, 1000, 2000, 5000, 10000, -1);
 
-    private Button playButton = null;
-    private Spinner bufferSizeSpinnerAhead, bufferSizeSpinnerBehind, sampleRateSpinner, channelSpinner;
-    private SimpleRowAdapter bufferSizeAdapterAhead, bufferSizeAdapterBehind, sampleRateAdapter, channelAdapter;
-    private CheckBox autoStartCheckBox = null, restartOnErrorCheckBox = null;
+    private Button playButton;
+    private Spinner bufferSizeSpinnerAhead, bufferSizeSpinnerBehind, sampleRateSpinner, channelSpinner, bufferTimeoutSpinner;
+    private SimpleRowAdapter bufferSizeAdapterAhead, bufferSizeAdapterBehind, sampleRateAdapter, channelAdapter, bufferTimeoutAdapter;
+    private CheckBox autoStartCheckBox, restartOnErrorCheckBox;
     private TextView errorText;
 
     private PulsePlaybackService boundService;
@@ -86,15 +89,18 @@ public class PulseDroidActivity extends AppCompatActivity {
         bufferSizeSpinnerBehind = findViewById(R.id.bufferSizeSpinnerBehind);
         sampleRateSpinner = findViewById(R.id.sampleRateSpinner);
         channelSpinner = findViewById(R.id.channelSpinner);
+        bufferTimeoutSpinner = findViewById(R.id.bufferTimeoutSpinner);
 
-        bufferSizeAdapterAhead = new BufferSizeAdapter(this, BUFFER_SIZES_AHEAD);
-        bufferSizeAdapterBehind = new BufferSizeAdapter(this, BUFFER_SIZES_BEHIND);
+        bufferSizeAdapterAhead = new DurationAdapter(this, BUFFER_SIZES_AHEAD);
+        bufferSizeAdapterBehind = new DurationAdapter(this, BUFFER_SIZES_BEHIND);
         sampleRateAdapter = new SimpleRowAdapter(SAMPLE_RATES);
         channelAdapter = new ChannelAdapter(this, CHANNELS);
+        bufferTimeoutAdapter = new DurationAdapter(this, BUFFER_TIMEOUTS);
         setUpSpinner(bufferSizeSpinnerAhead, bufferSizeAdapterAhead, "buffer_ms_ahead", DEFAULT_INDEX_AHEAD);
         setUpSpinner(bufferSizeSpinnerBehind, bufferSizeAdapterBehind, "buffer_ms", DEFAULT_INDEX_BEHIND);
         setUpSpinner(sampleRateSpinner, sampleRateAdapter, "sample_rate", DEFAULT_INDEX_SAMPLE_RATES);
         setUpSpinner(channelSpinner, channelAdapter, "channels", DEFAULT_INDEX_CHANNELS);
+        setUpSpinner(bufferTimeoutSpinner, bufferTimeoutAdapter, "buffer_timeout", DEFAULT_INDEX_BUFFER_TIMEOUTS);
 
         final SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
         server.setText(sharedPref.getString("server", ""));
@@ -129,16 +135,17 @@ public class PulseDroidActivity extends AppCompatActivity {
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                int bufferMillis1 = adapter.getItem(spinner.getSelectedItemPosition());
+                int item = adapter.getItem(spinner.getSelectedItemPosition());
                 getPreferences(MODE_PRIVATE).edit()
-                        .putInt(prefKey, bufferMillis1)
+                        .putInt(prefKey, item)
                         .apply();
                 int aheadMillis = bufferSizeAdapterAhead.getItem(bufferSizeSpinnerAhead.getSelectedItemPosition());
                 int behindMillis = bufferSizeAdapterBehind.getItem(bufferSizeSpinnerBehind.getSelectedItemPosition());
                 int sampleRate = sampleRateAdapter.getItem(sampleRateSpinner.getSelectedItemPosition());
                 int channels = channelAdapter.getItem(channelSpinner.getSelectedItemPosition());
+                int bufferTimeout = bufferTimeoutAdapter.getItem(bufferTimeoutSpinner.getSelectedItemPosition());
                 if (boundService != null) {
-                    boundService.setBufferSettings(aheadMillis, behindMillis, sampleRate, channels);
+                    boundService.setBufferSettings(aheadMillis, behindMillis, sampleRate, channels, bufferTimeout);
                 }
             }
 
@@ -233,9 +240,10 @@ public class PulseDroidActivity extends AppCompatActivity {
         int bufferSizeBehind = bufferSizeAdapterBehind.getItem(bufferSizeSpinnerBehind.getSelectedItemPosition());
         int sampleRate = sampleRateAdapter.getItem(sampleRateSpinner.getSelectedItemPosition());
         int channels = channelAdapter.getItem(channelSpinner.getSelectedItemPosition());
+        int bufferTimeout = bufferTimeoutAdapter.getItem(bufferTimeoutSpinner.getSelectedItemPosition());
 
         if (boundService != null) {
-            boundService.setBufferSettings(bufferSizeAhead, bufferSizeBehind, sampleRate, channels);
+            boundService.setBufferSettings(bufferSizeAhead, bufferSizeBehind, sampleRate, channels, bufferTimeout);
             boundService.setRestartOnError(restartOnErrorCheckBox.isChecked());
             boundService.play(server, port);
         }

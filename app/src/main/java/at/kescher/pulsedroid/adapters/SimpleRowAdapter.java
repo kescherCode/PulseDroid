@@ -1,4 +1,4 @@
-package at.kescher.pulsedroid;
+package at.kescher.pulsedroid.adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,10 +8,12 @@ import android.widget.TextView;
 
 import java.util.List;
 
+import at.kescher.pulsedroid.R;
+
 public class SimpleRowAdapter extends BaseAdapter {
     private final List<Integer> presets;
 
-    SimpleRowAdapter(List<Integer> presets) {
+    public SimpleRowAdapter(List<Integer> presets) {
         this.presets = presets;
     }
 

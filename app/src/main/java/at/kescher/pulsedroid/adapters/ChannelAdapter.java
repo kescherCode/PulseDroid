@@ -1,13 +1,15 @@
-package at.kescher.pulsedroid;
+package at.kescher.pulsedroid.adapters;
 
 import android.content.Context;
 
 import java.util.List;
 
+import at.kescher.pulsedroid.R;
+
 public class ChannelAdapter extends SimpleRowAdapter {
     private final Context context;
 
-    ChannelAdapter(Context context, List<Integer> presets) {
+    public ChannelAdapter(Context context, List<Integer> presets) {
         super(presets);
         this.context = context;
     }

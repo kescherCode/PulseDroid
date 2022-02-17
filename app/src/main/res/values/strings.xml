@@ -19,7 +19,7 @@
     <string name="input_port">Port</string>
     <string name="input_host">Host</string>
     <string name="play_error">Playback error:\n%1$s</string>
-    <string name="buffer_infinite">infinite</string>
+    <string name="infinite">infinite</string>
     <string name="buffer_minimal">minimal</string>
     <string name="input_buffer_size_ahead">Max buffer ahead</string>
     <string name="input_buffer_size_behind">Max buffer behind</string>
@@ -28,4 +28,5 @@
     <string name="Channels">Channels</string>
     <string name="Mono">Mono</string>
     <string name="Stereo">Stereo</string>
+    <string name="timeout">Timeout</string>
 </resources>

@@ -1,14 +1,16 @@
-package at.kescher.pulsedroid;
+package at.kescher.pulsedroid.adapters;
 
 import android.content.Context;
 
 import java.text.DecimalFormat;
 import java.util.List;
 
-class BufferSizeAdapter extends SimpleRowAdapter {
+import at.kescher.pulsedroid.R;
+
+public class DurationAdapter extends SimpleRowAdapter {
     private final Context context;
 
-    BufferSizeAdapter(Context context, List<Integer> presets) {
+    public DurationAdapter(Context context, List<Integer> presets) {
         super(presets);
         this.context = context;
     }
@@ -16,7 +18,7 @@ class BufferSizeAdapter extends SimpleRowAdapter {
     @Override
     protected String formatEntry(int item) {
         if (item < 0) {
-            return context.getString(R.string.buffer_infinite);
+            return context.getString(R.string.infinite);
         }
         if (item == 0) {
             return context.getString(R.string.buffer_minimal);

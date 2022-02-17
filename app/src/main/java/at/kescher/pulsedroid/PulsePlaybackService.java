@@ -44,7 +44,7 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
     @Nullable
     private Thread playWorkerThread;
     private volatile String server;
-    private volatile int bufferMillisAhead = 125, bufferMillisBehind = 1000, sampleRate = 44100, channels = 1, port;
+    private volatile int bufferMillisAhead = 125, bufferMillisBehind = 1000, sampleRate = 44100, channels = 1, bufferTimeout = 5000, port;
     private volatile boolean restartOnError = false;
 
     private final MutableLiveData<PlayState> playState = new MutableLiveData<>();
@@ -162,11 +162,11 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
             stopWorker();
         }
         playWorker = new PulsePlaybackWorker(server, port, wakeLock, handler, this);
-        playWorker.setBufferSettings(bufferMillisAhead, bufferMillisBehind, sampleRate, channels);
+        playWorker.setBufferSettings(bufferMillisAhead, bufferMillisBehind, sampleRate, channels, bufferTimeout);
         playWorkerThread = new Thread(playWorker);
 
-        Notification notif = buildNotification(R.string.playback_status_starting).build();
-        startForeground(NOTIFICATION, notif);
+        Notification persistentNotification = buildNotification(R.string.playback_status_starting).build();
+        startForeground(NOTIFICATION, persistentNotification);
 
         notifyState(PlayState.STARTING);
 
@@ -247,13 +247,14 @@ public class PulsePlaybackService extends Service implements PulsePlaybackWorker
         return playWorker == null ? null : playWorker.getError();
     }
 
-    public void setBufferSettings(int bufferSizeAhead, int bufferSizeBehind, int sampleRate, int channels) {
+    public void setBufferSettings(int bufferSizeAhead, int bufferSizeBehind, int sampleRate, int channels, int bufferTimeout) {
         this.bufferMillisAhead = bufferSizeAhead;
         this.bufferMillisBehind = bufferSizeBehind;
         this.sampleRate = sampleRate;
         this.channels = channels;
+        this.bufferTimeout = bufferTimeout;
         if (playWorker != null) {
-            playWorker.setBufferSettings(bufferSizeAhead, bufferSizeBehind, sampleRate, channels);
+            playWorker.setBufferSettings(bufferSizeAhead, bufferSizeBehind, sampleRate, channels, bufferTimeout);
         }
     }
 
