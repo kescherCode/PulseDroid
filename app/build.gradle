@@ -16,9 +16,9 @@ android {
         targetSdkVersion 34
 
         // version code: each number in the version string gets two digits (leading zero removed for first one). one additional digit for pre-release versions.
-        // So: 2.0.0 is: 02 + 00 + 00 + 0
-        versionCode 200030
-        versionName "2.1.0"
+        // So: 2.2.0 is: 02 + 20 + 00 + 0
+        versionCode 2020000
+        versionName "2.2.0"
     }
 
     buildTypes {
